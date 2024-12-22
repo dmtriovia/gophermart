@@ -7,6 +7,8 @@ require (
 	go.uber.org/zap v1.27.0
 )
 
+require github.com/golang-jwt/jwt/v4 v4.5.1 // direct
+
 require github.com/gorilla/mux v1.8.1 // direct
 
 require (
@@ -18,6 +20,6 @@ require (
 	github.com/lib/pq v1.10.9 // indirect
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/crypto v0.27.0 // indirect
+	golang.org/x/crypto v0.27.0 // direct
 	golang.org/x/text v0.18.0 // indirect
 )

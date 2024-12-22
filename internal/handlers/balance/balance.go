@@ -8,16 +8,16 @@ import (
 )
 
 type Balance struct {
-	serv service.Service
+	serv service.AccountService
 }
 
 func NewGetOrderHandler(
-	s service.Service,
+	s service.AccountService,
 ) *Balance {
 	return &Balance{serv: s}
 }
 
-func (h *Balance) GetBalanceHandler(
+func (h *Balance) BalanceHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {

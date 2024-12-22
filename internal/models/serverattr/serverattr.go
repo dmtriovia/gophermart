@@ -16,6 +16,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/handlers/withdrawals"
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/middleware/loggermiddleware"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr"
 	"github.com/dmitrovia/gophermart/internal/service/accountservice"
 	"github.com/dmitrovia/gophermart/internal/service/authservice"
 	"github.com/dmitrovia/gophermart/internal/service/orderservice"
@@ -47,6 +48,8 @@ type ServerAttr struct {
 	defIdleTimeout       int
 	apiURL               string
 	migrationsDir        string
+	loginAttr            *handlerattr.LoginAttr
+	rigsterAttr          *handlerattr.RegisterAttr
 }
 
 func (p *ServerAttr) Init() error {
@@ -54,13 +57,27 @@ func (p *ServerAttr) Init() error {
 	p.defAccSysAddr = ""
 	p.defDatabaseURL = ""
 	p.validAddrPattern = "^[a-zA-Z/ ]{1,100}:[0-9]{1,10}$"
-	p.zapLogLevel = "info"
 	p.waitSecRespDB = 10
 	p.defReadTimeout = 15
 	p.defWriteTimeout = 15
 	p.defIdleTimeout = 60
 	p.apiURL = "/api/user/"
 	p.migrationsDir = "db/migrations"
+	p.postgreStorage = &postgrestorage.PostgreStorage{}
+	p.postgreStorage.Initiate(p.pgxConn)
+	p.accountService = accountservice.NewAccountService(
+		p.postgreStorage, p.waitSecRespDB)
+	p.authService = authservice.NewAuthService(
+		p.postgreStorage, p.waitSecRespDB)
+	p.orderSerice = orderservice.NewOrderService(
+		p.postgreStorage, p.waitSecRespDB)
+	p.loginAttr = &handlerattr.LoginAttr{}
+	p.loginAttr.Secret = "qwerty"
+	p.loginAttr.TokenExpHour = 24
+	p.rigsterAttr = &handlerattr.RegisterAttr{}
+	p.rigsterAttr.Secret = "qwerty"
+	p.rigsterAttr.TokenExpHour = 24
+	p.zapLogLevel = "info"
 
 	logger, err := logger.Initialize(p.zapLogLevel)
 	if err != nil {
@@ -70,13 +87,6 @@ func (p *ServerAttr) Init() error {
 	}
 
 	p.zapLogger = logger
-	p.postgreStorage = &postgrestorage.PostgreStorage{}
-	p.accountService = accountservice.NewAccountService(
-		p.postgreStorage)
-	p.authService = authservice.NewAuthService(
-		p.postgreStorage)
-	p.orderSerice = orderservice.NewOrderService(
-		p.postgreStorage)
 
 	mux := mux.NewRouter()
 	initAPIMethods(mux, p)
@@ -102,18 +112,18 @@ func initAPIMethods(
 	getOrder := getorders.NewGetOrderHandler(
 		attr.orderSerice).GetOrderHandler
 	balance := balance.NewGetOrderHandler(
-		attr.accountService).GetBalanceHandler
+		attr.accountService).BalanceHandler
 	withdrawals := withdrawals.NewWithdrawalsHandler(
-		attr.accountService).GetWithdrawalsHandler
+		attr.accountService).WithdrawalsHandler
 	hNotAllowed := notallowed.NotAllowed{}
 	register := register.NewRegisterHandler(
-		attr.authService).GetRegisterHandler
+		attr.authService, attr.rigsterAttr).RegisterHandler
 	login := login.NewLoginHandler(
-		attr.authService).GetLoginandler
+		attr.authService, attr.loginAttr).LoginHandler
 	setOrder := setorders.NewSetOrderHandler(
 		attr.orderSerice).SetOrderHandler
 	withdraw := withdraw.NewWithdrawHandler(
-		attr.accountService).GetWithdrawHandler
+		attr.accountService).WithdrawHandler
 
 	setMethod(get, "orders", mux, attr, getOrder)
 	setMethod(get, "balance", mux, attr, balance)

@@ -8,11 +8,11 @@ import (
 )
 
 type SetOrders struct {
-	serv service.Service
+	serv service.OrderService
 }
 
 func NewSetOrderHandler(
-	s service.Service,
+	s service.OrderService,
 ) *SetOrders {
 	return &SetOrders{serv: s}
 }

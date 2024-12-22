@@ -8,16 +8,16 @@ import (
 )
 
 type Withdrawals struct {
-	serv service.Service
+	serv service.AccountService
 }
 
 func NewWithdrawalsHandler(
-	s service.Service,
+	s service.AccountService,
 ) *Withdrawals {
 	return &Withdrawals{serv: s}
 }
 
-func (h *Withdrawals) GetWithdrawalsHandler(
+func (h *Withdrawals) WithdrawalsHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {

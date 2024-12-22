@@ -1,30 +1,161 @@
 package register
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
+	"time"
 
+	"github.com/dmitrovia/gophermart/internal/models/apimodels"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr"
 	"github.com/dmitrovia/gophermart/internal/service"
+	"github.com/golang-jwt/jwt/v4"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type Register struct {
-	serv service.Service
+	serv service.AuthService
+	attr *handlerattr.RegisterAttr
 }
+
+var errEmptyData = errors.New("data is empty")
 
 func NewRegisterHandler(
-	s service.Service,
+	s service.AuthService,
+	inAttr *handlerattr.RegisterAttr,
 ) *Register {
-	return &Register{serv: s}
+	return &Register{serv: s, attr: inAttr}
 }
 
-func (h *Register) GetRegisterHandler(
+func (h *Register) RegisterHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	status := http.StatusOK
+	regUser := &apimodels.RegisterUser{}
 
-	fmt.Println(writer)
-	fmt.Println(req)
+	err := getReqData(req, regUser)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
 
-	writer.WriteHeader(status)
+		return
+	}
+
+	isValid := validate(regUser)
+	if !isValid {
+		writer.WriteHeader(http.StatusBadRequest)
+
+		return
+	}
+
+	exist, _, err := h.serv.UserIsExist(regUser.Login)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	if exist {
+		writer.WriteHeader(http.StatusConflict)
+
+		return
+	}
+
+	passwHash, err := cryptPass(regUser.Password)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	user := &bizmodels.User{
+		Login:    regUser.Login,
+		Password: passwHash,
+	}
+
+	err = h.serv.CreateUser(user)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	token, err := generateToken(regUser.Login, h.attr)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+
+		return
+	}
+
+	writer.Header().Set("Authorization", token)
+	writer.WriteHeader(http.StatusOK)
+}
+
+func validate(user *apimodels.RegisterUser) bool {
+	if user.Login == "" || user.Password == "" {
+		return false
+	}
+
+	return true
+}
+
+func cryptPass(pass string) (string, error) {
+	passwHash, err := bcrypt.GenerateFromPassword(
+		[]byte(pass), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf(
+			"cryptPass->GenerateFromPassword %w", err)
+	}
+
+	return string(passwHash), nil
+}
+
+func getReqData(
+	req *http.Request,
+	user *apimodels.RegisterUser,
+) error {
+	body, err := io.ReadAll(req.Body)
+	if err != nil {
+		return fmt.Errorf("getReqData->io.ReadAll %w", err)
+	}
+
+	if len(body) == 0 {
+		return fmt.Errorf("getReqData: %w", errEmptyData)
+	}
+
+	err = json.Unmarshal(body, user)
+	if err != nil {
+		return fmt.Errorf("getReqData->json.Unmarshal %w", err)
+	}
+
+	err = req.Body.Close()
+	if err != nil {
+		return fmt.Errorf("getReqData->req.Body.Close() %w", err)
+	}
+
+	return nil
+}
+
+func generateToken(
+	id string,
+	attr *handlerattr.RegisterAttr,
+) (string, error) {
+	generateToken := jwt.NewWithClaims(
+		jwt.SigningMethodHS256, jwt.MapClaims{
+			"id": id,
+			"exp": time.Now().Add(
+				time.Hour * time.Duration(attr.TokenExpHour)).Unix(),
+		})
+
+	token, err := generateToken.SignedString(
+		[]byte(attr.Secret))
+	if err != nil {
+		return token, fmt.Errorf(
+			"generateToken->generateToken.SignedString: %w",
+			errEmptyData)
+	}
+
+	return token, nil
 }

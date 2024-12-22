@@ -1,13 +1,21 @@
 package orderservice
 
-import "github.com/dmitrovia/gophermart/internal/storage"
+import (
+	"time"
+
+	"github.com/dmitrovia/gophermart/internal/storage"
+)
 
 type OrderService struct {
-	repository storage.Storage
+	repository  storage.Storage
+	ctxDuration time.Duration
 }
 
 func NewOrderService(
-	stor storage.Storage,
+	stor storage.Storage, ctxDur int,
 ) *OrderService {
-	return &OrderService{repository: stor}
+	return &OrderService{
+		repository:  stor,
+		ctxDuration: time.Duration(ctxDur),
+	}
 }
