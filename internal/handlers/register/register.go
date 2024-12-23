@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/models/apimodels"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr"
@@ -39,6 +40,8 @@ func (h *Register) RegisterHandler(
 	err := getReqData(req, regUser)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
+		logger.DoInfoLog("register->getReqData",
+			err, h.attr.GetLogger())
 
 		return
 	}
@@ -46,6 +49,8 @@ func (h *Register) RegisterHandler(
 	isValid := validate(regUser)
 	if !isValid {
 		writer.WriteHeader(http.StatusBadRequest)
+		logger.DoInfoLog("register->validate",
+			err, h.attr.GetLogger())
 
 		return
 	}
@@ -53,6 +58,8 @@ func (h *Register) RegisterHandler(
 	exist, _, err := h.serv.UserIsExist(regUser.Login)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
+		logger.DoInfoLog("register->UserIsExist",
+			err, h.attr.GetLogger())
 
 		return
 	}
@@ -66,6 +73,8 @@ func (h *Register) RegisterHandler(
 	passwHash, err := cryptPass(regUser.Password)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
+		logger.DoInfoLog("register->cryptPass",
+			err, h.attr.GetLogger())
 
 		return
 	}
@@ -78,6 +87,8 @@ func (h *Register) RegisterHandler(
 	err = h.serv.CreateUser(user)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
+		logger.DoInfoLog("register->CreateUser",
+			err, h.attr.GetLogger())
 
 		return
 	}
@@ -85,6 +96,8 @@ func (h *Register) RegisterHandler(
 	token, err := generateToken(regUser.Login, h.attr)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
+		logger.DoInfoLog("register->generateToken",
+			err, h.attr.GetLogger())
 
 		return
 	}
@@ -146,11 +159,12 @@ func generateToken(
 		jwt.SigningMethodHS256, jwt.MapClaims{
 			"id": id,
 			"exp": time.Now().Add(
-				time.Hour * time.Duration(attr.TokenExpHour)).Unix(),
+				time.Hour * time.Duration(
+					attr.GetTokenExpHour())).Unix(),
 		})
 
 	token, err := generateToken.SignedString(
-		[]byte(attr.Secret))
+		[]byte(attr.GetSecret()))
 	if err != nil {
 		return token, fmt.Errorf(
 			"generateToken->generateToken.SignedString: %w",

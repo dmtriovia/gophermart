@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/models/apimodels"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr"
 	"github.com/dmitrovia/gophermart/internal/service"
@@ -40,7 +41,9 @@ func (h *Login) LoginHandler(
 	if err != nil {
 		status = http.StatusBadRequest
 		writer.WriteHeader(status)
-		// log
+		logger.DoInfoLog("login->getReqData",
+			err, h.attr.GetLogger())
+
 		return
 	}
 
@@ -48,7 +51,9 @@ func (h *Login) LoginHandler(
 	if !isValid {
 		status = http.StatusBadRequest
 		writer.WriteHeader(status)
-		// log
+		logger.DoInfoLog("login->validate",
+			err, h.attr.GetLogger())
+
 		return
 	}
 
@@ -56,14 +61,16 @@ func (h *Login) LoginHandler(
 	if err != nil {
 		status = http.StatusUnauthorized
 		writer.WriteHeader(status)
-		// log
+		logger.DoInfoLog("login->UserIsExist",
+			err, h.attr.GetLogger())
+
 		return
 	}
 
 	if !exist {
 		status = http.StatusInternalServerError
 		writer.WriteHeader(status)
-		// log
+
 		return
 	}
 
@@ -71,7 +78,9 @@ func (h *Login) LoginHandler(
 	if err != nil {
 		status = http.StatusUnauthorized
 		writer.WriteHeader(status)
-		// log
+		logger.DoInfoLog("login->checkPass",
+			err, h.attr.GetLogger())
+
 		return
 	}
 
@@ -79,7 +88,10 @@ func (h *Login) LoginHandler(
 	if err != nil {
 		status = http.StatusInternalServerError
 		writer.WriteHeader(status)
-		// log
+
+		logger.DoInfoLog("login->generateToken",
+			err, h.attr.GetLogger())
+
 		return
 	}
 
@@ -95,11 +107,12 @@ func generateToken(
 		jwt.SigningMethodHS256, jwt.MapClaims{
 			"id": id,
 			"exp": time.Now().Add(
-				time.Hour * time.Duration(attr.TokenExpHour)).Unix(),
+				time.Hour * time.Duration(
+					attr.GetTokenExpHour())).Unix(),
 		})
 
 	token, err := generateToken.SignedString(
-		[]byte(attr.Secret))
+		[]byte(attr.GetSecret()))
 	if err != nil {
 		return token, fmt.Errorf(
 			"generateToken->generateToken.SignedString: %w",

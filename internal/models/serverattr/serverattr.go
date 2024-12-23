@@ -71,12 +71,6 @@ func (p *ServerAttr) Init() error {
 		p.postgreStorage, p.waitSecRespDB)
 	p.orderSerice = orderservice.NewOrderService(
 		p.postgreStorage, p.waitSecRespDB)
-	p.loginAttr = &handlerattr.LoginAttr{}
-	p.loginAttr.Secret = "qwerty"
-	p.loginAttr.TokenExpHour = 24
-	p.rigsterAttr = &handlerattr.RegisterAttr{}
-	p.rigsterAttr.Secret = "qwerty"
-	p.rigsterAttr.TokenExpHour = 24
 	p.zapLogLevel = "info"
 
 	logger, err := logger.Initialize(p.zapLogLevel)
@@ -87,6 +81,12 @@ func (p *ServerAttr) Init() error {
 	}
 
 	p.zapLogger = logger
+
+	p.loginAttr = &handlerattr.LoginAttr{}
+	p.rigsterAttr = &handlerattr.RegisterAttr{}
+
+	p.loginAttr.Init(logger)
+	p.rigsterAttr.Init(logger)
 
 	mux := mux.NewRouter()
 	initAPIMethods(mux, p)
@@ -148,6 +148,10 @@ func setMethod(
 		handler)
 	tmp.Use(
 		loggermiddleware.RequestLogger(attr.zapLogger))
+}
+
+func (p *ServerAttr) GetLogger() *zap.Logger {
+	return p.zapLogger
 }
 
 func (p *ServerAttr) GetmigrationsDir() string {

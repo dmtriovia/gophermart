@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/dmitrovia/gophermart/internal/functions/validate"
+	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/migrator"
 	"github.com/dmitrovia/gophermart/internal/models/serverattr"
 )
@@ -36,26 +37,32 @@ func RunProcess() {
 
 	err = UseMigrations(attr)
 	if err != nil {
-		fmt.Println("RunProcess->UseMigrations: %w", err)
+		logger.DoInfoLog("UseMigrations", err, attr.GetLogger())
 
 		return
 	}
 
 	err = attr.SetPgxConn(ctx)
 	if err != nil {
-		fmt.Println("RunProcess->initiateDBconn: %w", err)
+		logger.DoInfoLog("SetPgxConn", err, attr.GetLogger())
+
+		return
 	}
 
 	initiateFlags(attr)
 
 	err = initSystemAttrs(attr)
 	if err != nil {
-		fmt.Println("RunProcess->initSystemAttrs: %w", err)
+		logger.DoInfoLog("initSystemAttrs", err, attr.GetLogger())
+
+		return
 	}
 
 	err = runServer(attr)
 	if err != nil {
-		fmt.Println("RunProcess->runServer: %w", err)
+		logger.DoInfoLog("runServer", err, attr.GetLogger())
+
+		return
 	}
 }
 

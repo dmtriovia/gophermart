@@ -24,3 +24,13 @@ func Initialize(level string) (*zap.Logger, error) {
 
 	return zl, nil
 }
+
+func DoInfoLog(
+	method string,
+	err error,
+	logger *zap.Logger,
+) {
+	logger.Info(method,
+		zap.String("err:", err.Error()),
+	)
+}
