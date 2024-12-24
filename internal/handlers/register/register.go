@@ -24,6 +24,11 @@ type Register struct {
 
 var errEmptyData = errors.New("data is empty")
 
+const (
+	statusISE = http.StatusInternalServerError
+	statusBR  = http.StatusBadRequest
+)
+
 func NewRegisterHandler(
 	s service.AuthService,
 	inAttr *handlerattr.RegisterAttr,
@@ -39,27 +44,21 @@ func (h *Register) RegisterHandler(
 
 	err := getReqData(req, regUser)
 	if err != nil {
-		writer.WriteHeader(http.StatusBadRequest)
-		logger.DoInfoLog("register->getReqData",
-			err, h.attr.GetLogger())
+		setErr(writer, h.attr, err, statusBR, "getReqData")
 
 		return
 	}
 
 	isValid := validate(regUser)
 	if !isValid {
-		writer.WriteHeader(http.StatusBadRequest)
-		logger.DoInfoLog("register->validate",
-			err, h.attr.GetLogger())
+		setErr(writer, h.attr, err, statusBR, "validate")
 
 		return
 	}
 
 	exist, _, err := h.serv.UserIsExist(regUser.Login)
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		logger.DoInfoLog("register->UserIsExist",
-			err, h.attr.GetLogger())
+		setErr(writer, h.attr, err, statusISE, "UserIsExist")
 
 		return
 	}
@@ -72,9 +71,7 @@ func (h *Register) RegisterHandler(
 
 	passwHash, err := cryptPass(regUser.Password)
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		logger.DoInfoLog("register->cryptPass",
-			err, h.attr.GetLogger())
+		setErr(writer, h.attr, err, statusISE, "cryptPass")
 
 		return
 	}
@@ -86,24 +83,31 @@ func (h *Register) RegisterHandler(
 
 	err = h.serv.CreateUser(user)
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		logger.DoInfoLog("register->CreateUser",
-			err, h.attr.GetLogger())
+		setErr(writer, h.attr, err, statusISE, "CreateUser")
 
 		return
 	}
 
 	token, err := generateToken(regUser.Login, h.attr)
 	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		logger.DoInfoLog("register->generateToken",
-			err, h.attr.GetLogger())
+		setErr(writer, h.attr, err, statusISE, "generateToken")
 
 		return
 	}
 
 	writer.Header().Set("Authorization", token)
 	writer.WriteHeader(http.StatusOK)
+}
+
+func setErr(writer http.ResponseWriter,
+	inAttr *handlerattr.RegisterAttr,
+	err error,
+	status int,
+	method string,
+) {
+	writer.WriteHeader(status)
+	logger.DoInfoLogFromErr("register->"+method,
+		err, inAttr.GetLogger())
 }
 
 func validate(user *apimodels.RegisterUser) bool {

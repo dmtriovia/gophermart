@@ -17,6 +17,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/middleware/loggermiddleware"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr"
+	"github.com/dmitrovia/gophermart/internal/models/middlewareattr"
 	"github.com/dmitrovia/gophermart/internal/service/accountservice"
 	"github.com/dmitrovia/gophermart/internal/service/authservice"
 	"github.com/dmitrovia/gophermart/internal/service/orderservice"
@@ -50,6 +51,7 @@ type ServerAttr struct {
 	migrationsDir        string
 	loginAttr            *handlerattr.LoginAttr
 	rigsterAttr          *handlerattr.RegisterAttr
+	authMidAttr          *middlewareattr.AuthMiddlewareAttr
 }
 
 func (p *ServerAttr) Init() error {
@@ -84,9 +86,11 @@ func (p *ServerAttr) Init() error {
 
 	p.loginAttr = &handlerattr.LoginAttr{}
 	p.rigsterAttr = &handlerattr.RegisterAttr{}
+	p.authMidAttr = &middlewareattr.AuthMiddlewareAttr{}
 
 	p.loginAttr.Init(logger)
 	p.rigsterAttr.Init(logger)
+	p.authMidAttr.Init(logger, p.authService)
 
 	mux := mux.NewRouter()
 	initAPIMethods(mux, p)

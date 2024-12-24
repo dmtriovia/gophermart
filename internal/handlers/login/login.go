@@ -34,14 +34,12 @@ func (h *Login) LoginHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	status := http.StatusOK
 	regUser := &apimodels.LoginUser{}
 
 	err := getReqData(req, regUser)
 	if err != nil {
-		status = http.StatusBadRequest
-		writer.WriteHeader(status)
-		logger.DoInfoLog("login->getReqData",
+		writer.WriteHeader(http.StatusBadRequest)
+		logger.DoInfoLogFromErr("login->getReqData",
 			err, h.attr.GetLogger())
 
 		return
@@ -49,9 +47,8 @@ func (h *Login) LoginHandler(
 
 	isValid := validate(regUser)
 	if !isValid {
-		status = http.StatusBadRequest
-		writer.WriteHeader(status)
-		logger.DoInfoLog("login->validate",
+		writer.WriteHeader(http.StatusBadRequest)
+		logger.DoInfoLogFromErr("login->validate",
 			err, h.attr.GetLogger())
 
 		return
@@ -59,26 +56,23 @@ func (h *Login) LoginHandler(
 
 	exist, user, err := h.serv.UserIsExist(regUser.Login)
 	if err != nil {
-		status = http.StatusUnauthorized
-		writer.WriteHeader(status)
-		logger.DoInfoLog("login->UserIsExist",
+		writer.WriteHeader(http.StatusUnauthorized)
+		logger.DoInfoLogFromErr("login->UserIsExist",
 			err, h.attr.GetLogger())
 
 		return
 	}
 
 	if !exist {
-		status = http.StatusInternalServerError
-		writer.WriteHeader(status)
+		writer.WriteHeader(http.StatusInternalServerError)
 
 		return
 	}
 
 	err = checkPass(user.Password, regUser.Password)
 	if err != nil {
-		status = http.StatusUnauthorized
-		writer.WriteHeader(status)
-		logger.DoInfoLog("login->checkPass",
+		writer.WriteHeader(http.StatusUnauthorized)
+		logger.DoInfoLogFromErr("login->checkPass",
 			err, h.attr.GetLogger())
 
 		return
@@ -86,17 +80,15 @@ func (h *Login) LoginHandler(
 
 	token, err := generateToken(regUser.Login, h.attr)
 	if err != nil {
-		status = http.StatusInternalServerError
-		writer.WriteHeader(status)
-
-		logger.DoInfoLog("login->generateToken",
+		writer.WriteHeader(http.StatusInternalServerError)
+		logger.DoInfoLogFromErr("login->generateToken",
 			err, h.attr.GetLogger())
 
 		return
 	}
 
 	writer.Header().Set("Authorization", token)
-	writer.WriteHeader(status)
+	writer.WriteHeader(http.StatusOK)
 }
 
 func generateToken(

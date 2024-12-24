@@ -37,14 +37,16 @@ func RunProcess() {
 
 	err = UseMigrations(attr)
 	if err != nil {
-		logger.DoInfoLog("UseMigrations", err, attr.GetLogger())
+		logger.DoInfoLogFromErr(
+			"UseMigrations", err, attr.GetLogger())
 
 		return
 	}
 
 	err = attr.SetPgxConn(ctx)
 	if err != nil {
-		logger.DoInfoLog("SetPgxConn", err, attr.GetLogger())
+		logger.DoInfoLogFromErr(
+			"SetPgxConn", err, attr.GetLogger())
 
 		return
 	}
@@ -53,14 +55,16 @@ func RunProcess() {
 
 	err = initSystemAttrs(attr)
 	if err != nil {
-		logger.DoInfoLog("initSystemAttrs", err, attr.GetLogger())
+		logger.DoInfoLogFromErr(
+			"initSystemAttrs", err, attr.GetLogger())
 
 		return
 	}
 
 	err = runServer(attr)
 	if err != nil {
-		logger.DoInfoLog("runServer", err, attr.GetLogger())
+		logger.DoInfoLogFromErr(
+			"runServer", err, attr.GetLogger())
 
 		return
 	}
