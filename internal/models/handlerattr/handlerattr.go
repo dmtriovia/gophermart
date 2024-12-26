@@ -1,6 +1,9 @@
 package handlerattr
 
-import "go.uber.org/zap"
+import (
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
+	"go.uber.org/zap"
+)
 
 type LoginAttr struct {
 	secret       string
@@ -48,4 +51,31 @@ func (p *RegisterAttr) GetTokenExpHour() int {
 
 func (p *RegisterAttr) GetLogger() *zap.Logger {
 	return p.zapLogger
+}
+
+type SetOrderAttr struct {
+	zapLogger              *zap.Logger
+	validIdentOrderPattern string
+	sessionUser            *bizmodels.User
+}
+
+func (p *SetOrderAttr) Init(
+	logger *zap.Logger,
+	user *bizmodels.User,
+) {
+	p.zapLogger = logger
+	p.validIdentOrderPattern = "^[0-9]+$"
+	p.sessionUser = user
+}
+
+func (p *SetOrderAttr) GetLogger() *zap.Logger {
+	return p.zapLogger
+}
+
+func (p *SetOrderAttr) GetSessionUser() *bizmodels.User {
+	return p.sessionUser
+}
+
+func (p *SetOrderAttr) GetValidIdentOrderPattern() string {
+	return p.validIdentOrderPattern
 }

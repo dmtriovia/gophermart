@@ -9,4 +9,8 @@ type AuthService interface {
 	CreateUser(user *bizmodels.User) error
 }
 
-type OrderService interface{}
+type OrderService interface {
+	OrderIsExist(
+		identifier string) (bool, *bizmodels.Order, error)
+	CreateOrder(order *bizmodels.Order) error
+}

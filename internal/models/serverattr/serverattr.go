@@ -7,15 +7,17 @@ import (
 	"time"
 
 	"github.com/dmitrovia/gophermart/internal/handlers/balance"
-	"github.com/dmitrovia/gophermart/internal/handlers/getorders"
+	"github.com/dmitrovia/gophermart/internal/handlers/getorder"
 	"github.com/dmitrovia/gophermart/internal/handlers/login"
 	"github.com/dmitrovia/gophermart/internal/handlers/notallowed"
 	"github.com/dmitrovia/gophermart/internal/handlers/register"
-	"github.com/dmitrovia/gophermart/internal/handlers/setorders"
+	"github.com/dmitrovia/gophermart/internal/handlers/setorder"
 	"github.com/dmitrovia/gophermart/internal/handlers/withdraw"
 	"github.com/dmitrovia/gophermart/internal/handlers/withdrawals"
 	"github.com/dmitrovia/gophermart/internal/logger"
+	"github.com/dmitrovia/gophermart/internal/middleware/authmiddleware"
 	"github.com/dmitrovia/gophermart/internal/middleware/loggermiddleware"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr"
 	"github.com/dmitrovia/gophermart/internal/models/middlewareattr"
 	"github.com/dmitrovia/gophermart/internal/service/accountservice"
@@ -51,10 +53,13 @@ type ServerAttr struct {
 	migrationsDir        string
 	loginAttr            *handlerattr.LoginAttr
 	rigsterAttr          *handlerattr.RegisterAttr
+	setOrderAttr         *handlerattr.SetOrderAttr
 	authMidAttr          *middlewareattr.AuthMiddlewareAttr
+	sessionUser          *bizmodels.User
 }
 
 func (p *ServerAttr) Init() error {
+	p.sessionUser = &bizmodels.User{}
 	p.defPORT = "localhost:8080"
 	p.defAccSysAddr = ""
 	p.defDatabaseURL = ""
@@ -86,11 +91,13 @@ func (p *ServerAttr) Init() error {
 
 	p.loginAttr = &handlerattr.LoginAttr{}
 	p.rigsterAttr = &handlerattr.RegisterAttr{}
+	p.setOrderAttr = &handlerattr.SetOrderAttr{}
 	p.authMidAttr = &middlewareattr.AuthMiddlewareAttr{}
 
+	p.setOrderAttr.Init(logger, p.sessionUser)
 	p.loginAttr.Init(logger)
 	p.rigsterAttr.Init(logger)
-	p.authMidAttr.Init(logger, p.authService)
+	p.authMidAttr.Init(logger, p.authService, p.sessionUser)
 
 	mux := mux.NewRouter()
 	initAPIMethods(mux, p)
@@ -113,7 +120,7 @@ func initAPIMethods(
 	get := http.MethodGet
 	post := http.MethodPost
 
-	getOrder := getorders.NewGetOrderHandler(
+	getOrder := getorder.NewGetOrderHandler(
 		attr.orderSerice).GetOrderHandler
 	balance := balance.NewGetOrderHandler(
 		attr.accountService).BalanceHandler
@@ -124,18 +131,18 @@ func initAPIMethods(
 		attr.authService, attr.rigsterAttr).RegisterHandler
 	login := login.NewLoginHandler(
 		attr.authService, attr.loginAttr).LoginHandler
-	setOrder := setorders.NewSetOrderHandler(
-		attr.orderSerice).SetOrderHandler
+	setOrder := setorder.NewSetOrderHandler(
+		attr.orderSerice, attr.setOrderAttr).SetOrderHandler
 	withdraw := withdraw.NewWithdrawHandler(
 		attr.accountService).WithdrawHandler
 
-	setMethod(get, "orders", mux, attr, getOrder)
-	setMethod(get, "balance", mux, attr, balance)
-	setMethod(get, "withdrawals", mux, attr, withdrawals)
-	setMethod(post, "register", mux, attr, register)
-	setMethod(post, "login", mux, attr, login)
-	setMethod(post, "orders", mux, attr, setOrder)
-	setMethod(post, "withdraw", mux, attr, withdraw)
+	setMethod(get, "orders", mux, attr, getOrder, true)
+	setMethod(get, "balance", mux, attr, balance, true)
+	setMethod(get, "withdrawals", mux, attr, withdrawals, true)
+	setMethod(post, "register", mux, attr, register, false)
+	setMethod(post, "login", mux, attr, login, false)
+	setMethod(post, "orders", mux, attr, setOrder, true)
+	setMethod(post, "withdraw", mux, attr, withdraw, false)
 
 	mux.MethodNotAllowedHandler = hNotAllowed
 }
@@ -146,12 +153,18 @@ func setMethod(
 	mux *mux.Router,
 	attr *ServerAttr,
 	handler func(http.ResponseWriter, *http.Request),
+	onluAuth bool,
 ) {
-	tmp := mux.Methods(method).Subrouter()
-	tmp.HandleFunc(attr.apiURL+url,
+	subRouter := mux.Methods(method).Subrouter()
+	subRouter.HandleFunc(attr.apiURL+url,
 		handler)
-	tmp.Use(
+	subRouter.Use(
 		loggermiddleware.RequestLogger(attr.zapLogger))
+
+	if onluAuth {
+		subRouter.Use(
+			authmiddleware.AuthMiddleware(attr.authMidAttr))
+	}
 }
 
 func (p *ServerAttr) GetLogger() *zap.Logger {

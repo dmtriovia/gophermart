@@ -14,4 +14,12 @@ type Storage interface {
 	CreateUser(
 		ctx *context.Context,
 		user *bizmodels.User) error
+
+	GetOrder(
+		ctx *context.Context,
+		login string) (*bizmodels.Order, error)
+
+	CreateOrder(
+		ctx *context.Context,
+		user *bizmodels.Order) error
 }

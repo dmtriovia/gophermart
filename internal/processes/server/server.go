@@ -10,7 +10,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/dmitrovia/gophermart/internal/functions/validate"
+	"github.com/dmitrovia/gophermart/internal/functions/validatef"
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/migrator"
 	"github.com/dmitrovia/gophermart/internal/models/serverattr"
@@ -87,7 +87,7 @@ func initSystemAttrs(attr *serverattr.ServerAttr) error {
 	AccrualSystemAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS")
 
 	if RunAddress != "" {
-		res, err := validate.IsMatchesTemplate(
+		res, err := validatef.IsMatchesTemplate(
 			RunAddress, attr.GetValidAddrPattern())
 		if err != nil {
 			return fmt.Errorf(

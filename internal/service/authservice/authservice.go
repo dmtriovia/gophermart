@@ -41,7 +41,7 @@ func (s *AuthService) UserIsExist(login string) (
 
 	if err != nil {
 		return false, nil, fmt.Errorf(
-			"GetAllGauges->GetAllGauges: %w",
+			"UserIsExist->GetUser: %w",
 			err)
 	}
 

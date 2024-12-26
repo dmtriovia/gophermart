@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dmitrovia/gophermart/internal/logger"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
 	"github.com/dmitrovia/gophermart/internal/models/middlewareattr"
 	"github.com/golang-jwt/jwt/v4"
 )
@@ -18,12 +19,14 @@ var errUnexpectedMethod = errors.New("data is empty")
 
 var errUserNotExist = errors.New("user is not exist")
 
-func AuthMiddleware(next http.Handler,
+func AuthMiddleware(
 	attr *middlewareattr.AuthMiddlewareAttr,
-) http.Handler {
-	return http.HandlerFunc(
-		func(writer http.ResponseWriter, reader *http.Request) {
-			authHeader := reader.Header.Get("Authorization")
+) func(http.Handler) http.Handler {
+	handler := func(hand http.Handler) http.Handler {
+		authFn := func(writer http.ResponseWriter,
+			req *http.Request,
+		) {
+			authHeader := req.Header.Get("Authorization")
 
 			if authHeader == "" {
 				setErrStr(writer, attr, "header Authorization is empty")
@@ -61,8 +64,13 @@ func AuthMiddleware(next http.Handler,
 				return
 			}
 
-			next.ServeHTTP(writer, reader)
-		})
+			hand.ServeHTTP(writer, req)
+		}
+
+		return http.HandlerFunc(authFn)
+	}
+
+	return handler
 }
 
 func isValidToken(token *jwt.Token,
@@ -93,17 +101,31 @@ func isValidToken(token *jwt.Token,
 		return false, nil
 	}
 
-	exist, _, err := attr.GetAuthService().UserIsExist(login)
+	exist, user, err := attr.GetAuthService().UserIsExist(
+		login)
 	if err != nil {
 		return false, fmt.Errorf(
 			"isValidToken->UserIsExist %w", err)
 	}
+
+	setSessionUserData(user, attr)
 
 	if exist {
 		return false, errUserNotExist
 	}
 
 	return true, nil
+}
+
+func setSessionUserData(user *bizmodels.User,
+	attr *middlewareattr.AuthMiddlewareAttr,
+) {
+	sessionUser := attr.GetSessionUser()
+	sessionUser.SetUser(
+		user.GetID(),
+		user.GetLogin(),
+		user.GetPassword(),
+		user.GetCreateddate())
 }
 
 func parseToken(inToken string,

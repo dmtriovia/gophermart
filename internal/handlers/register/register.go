@@ -76,10 +76,9 @@ func (h *Register) RegisterHandler(
 		return
 	}
 
-	user := &bizmodels.User{
-		Login:    regUser.Login,
-		Password: passwHash,
-	}
+	user := &bizmodels.User{}
+	user.SetLogin(regUser.Login)
+	user.SetPassword(passwHash)
 
 	err = h.serv.CreateUser(user)
 	if err != nil {

@@ -1,4 +1,4 @@
-package getorders
+package getorder
 
 import (
 	"fmt"
