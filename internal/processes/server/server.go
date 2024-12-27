@@ -13,7 +13,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/functions/validatef"
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/migrator"
-	"github.com/dmitrovia/gophermart/internal/models/serverattr"
+	"github.com/dmitrovia/gophermart/internal/models/processesattr/serverattr"
 )
 
 var errParseFlags = errors.New("addr is not valid")

@@ -10,8 +10,8 @@ import (
 	"github.com/dmitrovia/gophermart/internal/functions/validatef"
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/models/apimodels"
-	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
-	"github.com/dmitrovia/gophermart/internal/models/handlerattr"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/setorderattr"
 	"github.com/dmitrovia/gophermart/internal/service"
 )
 
@@ -19,12 +19,12 @@ var errEmptyData = errors.New("data is empty")
 
 type SetOrders struct {
 	serv service.OrderService
-	attr *handlerattr.SetOrderAttr
+	attr *setorderattr.SetOrderAttr
 }
 
 func NewSetOrderHandler(
 	s service.OrderService,
-	inAttr *handlerattr.SetOrderAttr,
+	inAttr *setorderattr.SetOrderAttr,
 ) *SetOrders {
 	return &SetOrders{serv: s, attr: inAttr}
 }
@@ -93,10 +93,11 @@ func (h *SetOrders) SetOrderHandler(
 func createOrder(reqOrder *apimodels.SetOrder,
 	hand *SetOrders,
 ) error {
-	order := &bizmodels.Order{}
+	order := &ordermodel.Order{}
 
 	order.SetIdentifier(reqOrder.Identifier)
 	order.SetClient(hand.attr.GetSessionUser())
+	order.SetStatus(ordermodel.OrderStatusNew)
 
 	err := hand.serv.CreateOrder(order)
 	if err != nil {
@@ -108,7 +109,7 @@ func createOrder(reqOrder *apimodels.SetOrder,
 }
 
 func validate(order *apimodels.SetOrder,
-	attr *handlerattr.SetOrderAttr,
+	attr *setorderattr.SetOrderAttr,
 ) bool {
 	res, _ := validatef.IsMatchesTemplate(
 		order.Identifier, attr.GetValidIdentOrderPattern())

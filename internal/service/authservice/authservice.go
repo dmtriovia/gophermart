@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
 	"github.com/dmitrovia/gophermart/internal/storage"
 )
 
@@ -26,7 +26,7 @@ func NewAuthService(
 }
 
 func (s *AuthService) UserIsExist(login string) (
-	bool, *bizmodels.User, error,
+	bool, *usermodel.User, error,
 ) {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
@@ -49,7 +49,7 @@ func (s *AuthService) UserIsExist(login string) (
 }
 
 func (s *AuthService) CreateUser(
-	user *bizmodels.User,
+	user *usermodel.User,
 ) error {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),

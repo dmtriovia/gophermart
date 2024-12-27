@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
 	"github.com/dmitrovia/gophermart/internal/storage"
 )
 
@@ -26,7 +26,7 @@ func NewOrderService(
 }
 
 func (s *OrderService) OrderIsExist(ident string) (
-	bool, *bizmodels.Order, error,
+	bool, *ordermodel.Order, error,
 ) {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
@@ -49,7 +49,7 @@ func (s *OrderService) OrderIsExist(ident string) (
 }
 
 func (s *OrderService) CreateOrder(
-	order *bizmodels.Order,
+	order *ordermodel.Order,
 ) error {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),

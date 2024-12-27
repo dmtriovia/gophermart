@@ -10,7 +10,7 @@ import (
 
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/models/apimodels"
-	"github.com/dmitrovia/gophermart/internal/models/handlerattr"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/loginattr"
 	"github.com/dmitrovia/gophermart/internal/service"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -20,12 +20,12 @@ var errEmptyData = errors.New("data is empty")
 
 type Login struct {
 	serv service.AuthService
-	attr *handlerattr.LoginAttr
+	attr *loginattr.LoginAttr
 }
 
 func NewLoginHandler(
 	s service.AuthService,
-	inAttr *handlerattr.LoginAttr,
+	inAttr *loginattr.LoginAttr,
 ) *Login {
 	return &Login{serv: s, attr: inAttr}
 }
@@ -93,7 +93,7 @@ func (h *Login) LoginHandler(
 
 func generateToken(
 	id string,
-	attr *handlerattr.LoginAttr,
+	attr *loginattr.LoginAttr,
 ) (string, error) {
 	generateToken := jwt.NewWithClaims(
 		jwt.SigningMethodHS256, jwt.MapClaims{

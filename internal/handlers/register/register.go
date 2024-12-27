@@ -10,8 +10,8 @@ import (
 
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/models/apimodels"
-	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
-	"github.com/dmitrovia/gophermart/internal/models/handlerattr"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/registerattr"
 	"github.com/dmitrovia/gophermart/internal/service"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
@@ -19,7 +19,7 @@ import (
 
 type Register struct {
 	serv service.AuthService
-	attr *handlerattr.RegisterAttr
+	attr *registerattr.RegisterAttr
 }
 
 var errEmptyData = errors.New("data is empty")
@@ -31,7 +31,7 @@ const (
 
 func NewRegisterHandler(
 	s service.AuthService,
-	inAttr *handlerattr.RegisterAttr,
+	inAttr *registerattr.RegisterAttr,
 ) *Register {
 	return &Register{serv: s, attr: inAttr}
 }
@@ -76,7 +76,7 @@ func (h *Register) RegisterHandler(
 		return
 	}
 
-	user := &bizmodels.User{}
+	user := &usermodel.User{}
 	user.SetLogin(regUser.Login)
 	user.SetPassword(passwHash)
 
@@ -99,7 +99,7 @@ func (h *Register) RegisterHandler(
 }
 
 func setErr(writer http.ResponseWriter,
-	inAttr *handlerattr.RegisterAttr,
+	inAttr *registerattr.RegisterAttr,
 	err error,
 	status int,
 	method string,
@@ -156,7 +156,7 @@ func getReqData(
 
 func generateToken(
 	id string,
-	attr *handlerattr.RegisterAttr,
+	attr *registerattr.RegisterAttr,
 ) (string, error) {
 	generateToken := jwt.NewWithClaims(
 		jwt.SigningMethodHS256, jwt.MapClaims{

@@ -1,7 +1,7 @@
-package middlewareattr
+package authmiddlewareattr
 
 import (
-	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
 	as "github.com/dmitrovia/gophermart/internal/service/authservice"
 	"go.uber.org/zap"
 )
@@ -10,12 +10,12 @@ type AuthMiddlewareAttr struct {
 	secret      string
 	zapLogger   *zap.Logger
 	authService *as.AuthService
-	sessionUser *bizmodels.User
+	sessionUser *usermodel.User
 }
 
 func (p *AuthMiddlewareAttr) Init(logger *zap.Logger,
 	authService *as.AuthService,
-	user *bizmodels.User,
+	user *usermodel.User,
 ) {
 	p.secret = "qwerty"
 	p.zapLogger = logger
@@ -24,7 +24,7 @@ func (p *AuthMiddlewareAttr) Init(logger *zap.Logger,
 }
 
 func (
-	p *AuthMiddlewareAttr) GetSessionUser() *bizmodels.User {
+	p *AuthMiddlewareAttr) GetSessionUser() *usermodel.User {
 	return p.sessionUser
 }
 

@@ -17,9 +17,11 @@ import (
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/middleware/authmiddleware"
 	"github.com/dmitrovia/gophermart/internal/middleware/loggermiddleware"
-	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
-	"github.com/dmitrovia/gophermart/internal/models/handlerattr"
-	"github.com/dmitrovia/gophermart/internal/models/middlewareattr"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/loginattr"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/registerattr"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/setorderattr"
+	"github.com/dmitrovia/gophermart/internal/models/middlewareattr/authmiddlewareattr"
 	"github.com/dmitrovia/gophermart/internal/service/accountservice"
 	"github.com/dmitrovia/gophermart/internal/service/authservice"
 	"github.com/dmitrovia/gophermart/internal/service/orderservice"
@@ -51,15 +53,15 @@ type ServerAttr struct {
 	defIdleTimeout       int
 	apiURL               string
 	migrationsDir        string
-	loginAttr            *handlerattr.LoginAttr
-	rigsterAttr          *handlerattr.RegisterAttr
-	setOrderAttr         *handlerattr.SetOrderAttr
-	authMidAttr          *middlewareattr.AuthMiddlewareAttr
-	sessionUser          *bizmodels.User
+	loginAttr            *loginattr.LoginAttr
+	rigsterAttr          *registerattr.RegisterAttr
+	setOrderAttr         *setorderattr.SetOrderAttr
+	authMidAttr          *authmiddlewareattr.AuthMiddlewareAttr
+	sessionUser          *usermodel.User
 }
 
 func (p *ServerAttr) Init() error {
-	p.sessionUser = &bizmodels.User{}
+	p.sessionUser = &usermodel.User{}
 	p.defPORT = "localhost:8080"
 	p.defAccSysAddr = ""
 	p.defDatabaseURL = ""
@@ -89,10 +91,10 @@ func (p *ServerAttr) Init() error {
 
 	p.zapLogger = logger
 
-	p.loginAttr = &handlerattr.LoginAttr{}
-	p.rigsterAttr = &handlerattr.RegisterAttr{}
-	p.setOrderAttr = &handlerattr.SetOrderAttr{}
-	p.authMidAttr = &middlewareattr.AuthMiddlewareAttr{}
+	p.loginAttr = &loginattr.LoginAttr{}
+	p.rigsterAttr = &registerattr.RegisterAttr{}
+	p.setOrderAttr = &setorderattr.SetOrderAttr{}
+	p.authMidAttr = &authmiddlewareattr.AuthMiddlewareAttr{}
 
 	p.setOrderAttr.Init(logger, p.sessionUser)
 	p.loginAttr.Init(logger)

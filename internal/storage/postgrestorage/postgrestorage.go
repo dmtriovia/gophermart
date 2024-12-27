@@ -7,7 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
 	"github.com/jackc/pgx/v5"
 )
 
@@ -23,7 +24,7 @@ func (m *PostgreStorage) Initiate(
 
 func (m *PostgreStorage) CreateUser(
 	ctx *context.Context,
-	user *bizmodels.User,
+	user *usermodel.User,
 ) error {
 	_, err := m.conn.Exec(
 		*ctx,
@@ -41,8 +42,8 @@ func (m *PostgreStorage) CreateUser(
 func (m *PostgreStorage) GetUser(
 	ctx *context.Context,
 	login string,
-) (*bizmodels.User, error) {
-	user := &bizmodels.User{}
+) (*usermodel.User, error) {
+	user := &usermodel.User{}
 
 	var (
 		outID          int32
@@ -79,7 +80,7 @@ func (m *PostgreStorage) GetUser(
 
 func (m *PostgreStorage) CreateOrder(
 	ctx *context.Context,
-	order *bizmodels.Order,
+	order *ordermodel.Order,
 ) error {
 	_, err := m.conn.Exec(
 		*ctx,
@@ -96,12 +97,13 @@ func (m *PostgreStorage) CreateOrder(
 func (m *PostgreStorage) GetOrder(
 	ctx *context.Context,
 	ident string,
-) (*bizmodels.Order, error) {
-	order := &bizmodels.Order{}
-	user := &bizmodels.User{}
+) (*ordermodel.Order, error) {
+	order := &ordermodel.Order{}
+	user := &usermodel.User{}
 
 	var (
 		outOrderID          int32
+		outOrderStatus      string
 		outOrderIdentifier  string
 		outOrderCreateddate time.Time
 
@@ -113,7 +115,7 @@ func (m *PostgreStorage) GetOrder(
 
 	err := m.conn.QueryRow(
 		*ctx,
-		"select o.id,o.identifier,o.createddate,"+
+		"select o.id,o.identifier,o.createddate, o.status,"+
 			" u.id, u.login, u.password, u.createddate"+
 			" from order o"+
 			" left join user u on u.id = order.client"+
@@ -145,7 +147,8 @@ func (m *PostgreStorage) GetOrder(
 		outOrderID,
 		outOrderIdentifier,
 		user,
-		outOrderCreateddate)
+		outOrderCreateddate,
+		outOrderStatus)
 
 	return order, nil
 }

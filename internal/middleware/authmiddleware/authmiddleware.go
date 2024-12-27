@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/dmitrovia/gophermart/internal/logger"
-	"github.com/dmitrovia/gophermart/internal/models/bizmodels"
-	"github.com/dmitrovia/gophermart/internal/models/middlewareattr"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
+	"github.com/dmitrovia/gophermart/internal/models/middlewareattr/authmiddlewareattr"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -20,7 +20,7 @@ var errUnexpectedMethod = errors.New("data is empty")
 var errUserNotExist = errors.New("user is not exist")
 
 func AuthMiddleware(
-	attr *middlewareattr.AuthMiddlewareAttr,
+	attr *authmiddlewareattr.AuthMiddlewareAttr,
 ) func(http.Handler) http.Handler {
 	handler := func(hand http.Handler) http.Handler {
 		authFn := func(writer http.ResponseWriter,
@@ -74,7 +74,7 @@ func AuthMiddleware(
 }
 
 func isValidToken(token *jwt.Token,
-	attr *middlewareattr.AuthMiddlewareAttr,
+	attr *authmiddlewareattr.AuthMiddlewareAttr,
 ) (bool, error) {
 	if !token.Valid {
 		return false, nil
@@ -117,8 +117,8 @@ func isValidToken(token *jwt.Token,
 	return true, nil
 }
 
-func setSessionUserData(user *bizmodels.User,
-	attr *middlewareattr.AuthMiddlewareAttr,
+func setSessionUserData(user *usermodel.User,
+	attr *authmiddlewareattr.AuthMiddlewareAttr,
 ) {
 	sessionUser := attr.GetSessionUser()
 	sessionUser.SetUser(
@@ -129,7 +129,7 @@ func setSessionUserData(user *bizmodels.User,
 }
 
 func parseToken(inToken string,
-	attr *middlewareattr.AuthMiddlewareAttr,
+	attr *authmiddlewareattr.AuthMiddlewareAttr,
 ) (*jwt.Token, error) {
 	token, err := jwt.Parse(inToken,
 		func(token *jwt.Token) (interface{}, error) {
@@ -157,7 +157,7 @@ func parseToken(inToken string,
 }
 
 func setErrStr(writer http.ResponseWriter,
-	attr *middlewareattr.AuthMiddlewareAttr,
+	attr *authmiddlewareattr.AuthMiddlewareAttr,
 	txt string,
 ) {
 	writer.WriteHeader(http.StatusUnauthorized)
@@ -166,7 +166,7 @@ func setErrStr(writer http.ResponseWriter,
 }
 
 func setErr(writer http.ResponseWriter,
-	attr *middlewareattr.AuthMiddlewareAttr,
+	attr *authmiddlewareattr.AuthMiddlewareAttr,
 	err error,
 ) {
 	writer.WriteHeader(http.StatusUnauthorized)

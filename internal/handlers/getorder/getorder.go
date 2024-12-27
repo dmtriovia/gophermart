@@ -1,7 +1,6 @@
 package getorder
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/dmitrovia/gophermart/internal/service"
@@ -21,10 +20,6 @@ func (h *GetOrders) GetOrderHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	status := http.StatusOK
-
-	fmt.Println(writer)
-	fmt.Println(req)
-
-	writer.WriteHeader(status)
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
 }
