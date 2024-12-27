@@ -18,7 +18,11 @@ type Storage interface {
 
 	GetOrder(
 		ctx *context.Context,
-		login string) (*ordermodel.Order, error)
+		ident string) (*ordermodel.Order, error)
+
+	GetOrdersByClient(
+		ctx *context.Context,
+		clientID int32) (*[]ordermodel.Order, *[]error, error)
 
 	CreateOrder(
 		ctx *context.Context,

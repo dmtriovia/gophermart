@@ -16,4 +16,6 @@ type OrderService interface {
 	OrderIsExist(
 		identifier string) (bool, *ordermodel.Order, error)
 	CreateOrder(order *ordermodel.Order) error
+	GetOrdersByClient(
+		clientID int32) (*[]ordermodel.Order, *[]error, error)
 }

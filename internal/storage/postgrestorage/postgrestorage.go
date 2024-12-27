@@ -106,6 +106,7 @@ func (m *PostgreStorage) GetOrder(
 		outOrderStatus      string
 		outOrderIdentifier  string
 		outOrderCreateddate time.Time
+		outOrderAccrual     int32
 
 		outUserID          int32
 		outUserLogin       string
@@ -115,7 +116,8 @@ func (m *PostgreStorage) GetOrder(
 
 	err := m.conn.QueryRow(
 		*ctx,
-		"select o.id,o.identifier,o.createddate, o.status,"+
+		"select o.id,o.identifier,o.createddate,o.status,"+
+			"o.accrual,"+
 			" u.id, u.login, u.password, u.createddate"+
 			" from order o"+
 			" left join user u on u.id = order.client"+
@@ -123,6 +125,8 @@ func (m *PostgreStorage) GetOrder(
 		ident).Scan(&outOrderID,
 		&outOrderIdentifier,
 		&outOrderCreateddate,
+		&outOrderStatus,
+		&outOrderAccrual,
 		&outUserID,
 		&outUserLogin,
 		&outUserPass,
@@ -148,7 +152,70 @@ func (m *PostgreStorage) GetOrder(
 		outOrderIdentifier,
 		user,
 		outOrderCreateddate,
-		outOrderStatus)
+		outOrderStatus, outOrderAccrual)
 
 	return order, nil
+}
+
+func (m *PostgreStorage) GetOrdersByClient(
+	ctx *context.Context,
+	clientID int32,
+) (*[]ordermodel.Order, *[]error, error) {
+	var (
+		outOrderID, outUserID, outOrderAccrual  int32
+		outOrderStatus, outOrderIdentifier      string
+		outUserLogin, outUserPass               string
+		outUserCreateddate, outOrderCreateddate time.Time
+	)
+
+	rows, err := m.conn.Query(
+		*ctx,
+		"select o.id,o.identifier,o.createddate,o.status,"+
+			"o.accrual,"+
+			" u.id, u.login, u.password, u.createddate"+
+			" from order o"+
+			" left join user u on u.id = o.client"+
+			" where o.client=$1"+
+			" order by o.createddate desc",
+		clientID)
+	if err != nil {
+		return nil, nil, fmt.Errorf(
+			"GetOrderByClient->m.conn.Query %w", err)
+	}
+
+	defer rows.Close()
+
+	cnt := 0
+	for rows.Next() {
+		cnt++
+	}
+
+	orders := make([]ordermodel.Order, 0, cnt)
+	errors := make([]error, 0, cnt)
+
+	if cnt == 0 {
+		return &orders, &errors, nil
+	}
+
+	for rows.Next() {
+		order := &ordermodel.Order{}
+		user := &usermodel.User{}
+		err = rows.Scan(&outOrderID, &outOrderIdentifier,
+			&outOrderCreateddate, &outOrderStatus, &outUserID,
+			&outUserLogin, &outUserPass, &outUserCreateddate)
+
+		if err != nil {
+			errors = append(errors, err)
+		} else {
+			user.SetUser(outUserID, outUserPass,
+				outUserLogin, outUserCreateddate)
+			order.SetOrder(
+				outOrderID, outOrderIdentifier, user,
+				outOrderCreateddate, outOrderStatus, outOrderAccrual)
+
+			orders = append(orders, *order)
+		}
+	}
+
+	return &orders, &errors, nil
 }

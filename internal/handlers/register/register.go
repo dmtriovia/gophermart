@@ -40,7 +40,7 @@ func (h *Register) RegisterHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	regUser := &apimodels.RegisterUser{}
+	regUser := &apimodels.InRegisterUser{}
 
 	err := getReqData(req, regUser)
 	if err != nil {
@@ -109,7 +109,7 @@ func setErr(writer http.ResponseWriter,
 		err, inAttr.GetLogger())
 }
 
-func validate(user *apimodels.RegisterUser) bool {
+func validate(user *apimodels.InRegisterUser) bool {
 	if user.Login == "" || user.Password == "" {
 		return false
 	}
@@ -130,7 +130,7 @@ func cryptPass(pass string) (string, error) {
 
 func getReqData(
 	req *http.Request,
-	user *apimodels.RegisterUser,
+	user *apimodels.InRegisterUser,
 ) error {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {

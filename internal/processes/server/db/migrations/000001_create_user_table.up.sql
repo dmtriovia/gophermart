@@ -4,3 +4,8 @@ CREATE TABLE user (
    password varchar not null,
    createddate TIMESTAMP default now()
 );
+
+COMMIT;
+
+CREATE INDEX order__login__index
+ON user (login);

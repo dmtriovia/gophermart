@@ -33,7 +33,7 @@ func (h *SetOrders) SetOrderHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	reqOrder := &apimodels.SetOrder{}
+	reqOrder := &apimodels.InSetOrder{}
 
 	err := getReqData(req, reqOrder)
 	if err != nil {
@@ -90,7 +90,7 @@ func (h *SetOrders) SetOrderHandler(
 	writer.WriteHeader(http.StatusAccepted)
 }
 
-func createOrder(reqOrder *apimodels.SetOrder,
+func createOrder(reqOrder *apimodels.InSetOrder,
 	hand *SetOrders,
 ) error {
 	order := &ordermodel.Order{}
@@ -108,7 +108,7 @@ func createOrder(reqOrder *apimodels.SetOrder,
 	return nil
 }
 
-func validate(order *apimodels.SetOrder,
+func validate(order *apimodels.InSetOrder,
 	attr *setorderattr.SetOrderAttr,
 ) bool {
 	res, _ := validatef.IsMatchesTemplate(
@@ -119,7 +119,7 @@ func validate(order *apimodels.SetOrder,
 
 func getReqData(
 	req *http.Request,
-	order *apimodels.SetOrder,
+	order *apimodels.InSetOrder,
 ) error {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {

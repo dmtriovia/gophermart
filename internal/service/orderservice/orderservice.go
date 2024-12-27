@@ -16,6 +16,9 @@ type OrderService struct {
 	ctxDuration time.Duration
 }
 
+func GetOrdersByClient() {
+}
+
 func NewOrderService(
 	stor storage.Storage, ctxDur int,
 ) *OrderService {
@@ -23,6 +26,25 @@ func NewOrderService(
 		repository:  stor,
 		ctxDuration: time.Duration(ctxDur),
 	}
+}
+
+func (s *OrderService) GetOrdersByClient(
+	clientID int32) (
+	*[]ordermodel.Order,
+	*[]error, error,
+) {
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		s.ctxDuration)
+	defer cancel()
+
+	orders, errors, err := s.repository.GetOrdersByClient(
+		&ctx,
+		clientID)
+
+	return orders, errors, fmt.Errorf(
+		"GetOrdersByClient->GetOrdersByClient: %w",
+		err)
 }
 
 func (s *OrderService) OrderIsExist(ident string) (

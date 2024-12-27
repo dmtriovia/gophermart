@@ -20,6 +20,7 @@ type Order struct {
 	client      *usermodel.User
 	createddate time.Time
 	status      string
+	accrual     int32
 }
 
 func (o *Order) SetOrder(
@@ -28,12 +29,14 @@ func (o *Order) SetOrder(
 	client *usermodel.User,
 	createddate time.Time,
 	status string,
+	accrual int32,
 ) {
 	o.id = idDB
 	o.identifier = identifier
 	o.client = client
 	o.createddate = createddate
 	o.status = status
+	o.accrual = accrual
 }
 
 func (o *Order) SetStatus(status string) {
@@ -50,6 +53,14 @@ func (o *Order) SetIdentifier(ident string) {
 
 func (o *Order) GetID() int32 {
 	return o.id
+}
+
+func (o *Order) GetAccrual() int32 {
+	return o.accrual
+}
+
+func (o *Order) GetStatus() string {
+	return o.status
 }
 
 func (o *Order) GetIdentifier() string {

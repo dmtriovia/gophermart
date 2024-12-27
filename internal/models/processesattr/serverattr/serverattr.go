@@ -18,6 +18,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/middleware/authmiddleware"
 	"github.com/dmitrovia/gophermart/internal/middleware/loggermiddleware"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/getorderattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/loginattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/registerattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/setorderattr"
@@ -56,6 +57,7 @@ type ServerAttr struct {
 	loginAttr            *loginattr.LoginAttr
 	rigsterAttr          *registerattr.RegisterAttr
 	setOrderAttr         *setorderattr.SetOrderAttr
+	getOrderAttr         *getorderattr.GetOrderAttr
 	authMidAttr          *authmiddlewareattr.AuthMiddlewareAttr
 	sessionUser          *usermodel.User
 }
@@ -94,9 +96,11 @@ func (p *ServerAttr) Init() error {
 	p.loginAttr = &loginattr.LoginAttr{}
 	p.rigsterAttr = &registerattr.RegisterAttr{}
 	p.setOrderAttr = &setorderattr.SetOrderAttr{}
+	p.getOrderAttr = &getorderattr.GetOrderAttr{}
 	p.authMidAttr = &authmiddlewareattr.AuthMiddlewareAttr{}
 
 	p.setOrderAttr.Init(logger, p.sessionUser)
+	p.getOrderAttr.Init(logger, p.sessionUser)
 	p.loginAttr.Init(logger)
 	p.rigsterAttr.Init(logger)
 	p.authMidAttr.Init(logger, p.authService, p.sessionUser)
@@ -123,7 +127,7 @@ func initAPIMethods(
 	post := http.MethodPost
 
 	getOrder := getorder.NewGetOrderHandler(
-		attr.orderSerice).GetOrderHandler
+		attr.orderSerice, attr.getOrderAttr).GetOrderHandler
 	balance := balance.NewGetOrderHandler(
 		attr.accountService).BalanceHandler
 	withdrawals := withdrawals.NewWithdrawalsHandler(

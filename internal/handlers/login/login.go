@@ -34,7 +34,7 @@ func (h *Login) LoginHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	regUser := &apimodels.LoginUser{}
+	regUser := &apimodels.InLoginUser{}
 
 	err := getReqData(req, regUser)
 	if err != nil {
@@ -125,7 +125,7 @@ func checkPass(hash string, pass string) error {
 	return nil
 }
 
-func validate(user *apimodels.LoginUser) bool {
+func validate(user *apimodels.InLoginUser) bool {
 	if user.Login == "" || user.Password == "" {
 		return false
 	}
@@ -135,7 +135,7 @@ func validate(user *apimodels.LoginUser) bool {
 
 func getReqData(
 	req *http.Request,
-	user *apimodels.LoginUser,
+	user *apimodels.InLoginUser,
 ) error {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
