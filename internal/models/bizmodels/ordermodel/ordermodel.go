@@ -15,12 +15,13 @@ const OrderStatusInvalid string = "INVALID"
 const OrderStatusProcessed string = "PROCESSED"
 
 type Order struct {
-	id          int32
-	identifier  string
-	client      *usermodel.User
-	createddate time.Time
-	status      string
-	accrual     int32
+	id             int32
+	identifier     string
+	client         *usermodel.User
+	createddate    time.Time
+	status         string
+	accrual        int32
+	pointsWriteOff float32
 }
 
 func (o *Order) SetOrder(
@@ -30,6 +31,7 @@ func (o *Order) SetOrder(
 	createddate time.Time,
 	status string,
 	accrual int32,
+	pointsWriteOff float32,
 ) {
 	o.id = idDB
 	o.identifier = identifier
@@ -37,6 +39,11 @@ func (o *Order) SetOrder(
 	o.createddate = createddate
 	o.status = status
 	o.accrual = accrual
+	o.pointsWriteOff = pointsWriteOff
+}
+
+func (o *Order) GetpointsWriteOff() float32 {
+	return o.pointsWriteOff
 }
 
 func (o *Order) SetStatus(status string) {

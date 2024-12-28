@@ -23,6 +23,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/loginattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/registerattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/setorderattr"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/withdrawattr"
 	"github.com/dmitrovia/gophermart/internal/models/middlewareattr/authmiddlewareattr"
 	"github.com/dmitrovia/gophermart/internal/service/accountservice"
 	"github.com/dmitrovia/gophermart/internal/service/authservice"
@@ -64,6 +65,7 @@ type ServerAttr struct {
 	setOrderAttr         *setorderattr.SetOrderAttr
 	getOrderAttr         *getorderattr.GetOrderAttr
 	balanceAttr          *balanceattr.BalanceAttr
+	withdraAttr          *withdrawattr.WithdrawAttr
 	authMidAttr          *authmiddlewareattr.AuthMiddlewareAttr
 	sessionUser          *usermodel.User
 }
@@ -74,8 +76,7 @@ func (p *ServerAttr) Init() error {
 	p.defAccSysAddr, p.defDatabaseURL = "", ""
 	p.validAddrPattern = "^[a-zA-Z/ ]{1,100}:[0-9]{1,10}$"
 	p.waitSecRespDB = 10
-	p.defReadTimeout = 15
-	p.defWriteTimeout = 15
+	p.defReadTimeout, p.defWriteTimeout = 15, 15
 	p.defIdleTimeout = 60
 	p.apiURL = "/api/user/"
 	p.migrationsDir = "db/migrations"
@@ -101,18 +102,7 @@ func (p *ServerAttr) Init() error {
 	}
 
 	p.zapLogger = logger
-
-	p.loginAttr = &loginattr.LoginAttr{}
-	p.rigsterAttr = &registerattr.RegisterAttr{}
-	p.setOrderAttr = &setorderattr.SetOrderAttr{}
-	p.getOrderAttr = &getorderattr.GetOrderAttr{}
-	p.balanceAttr = &balanceattr.BalanceAttr{}
-	p.authMidAttr = &authmiddlewareattr.AuthMiddlewareAttr{}
-	p.setOrderAttr.Init(logger, p.sessionUser)
-	p.getOrderAttr.Init(logger, p.sessionUser)
-	p.balanceAttr.Init(logger, p.sessionUser)
-	p.loginAttr.Init(logger)
-	p.rigsterAttr.Init(logger)
+	initHandlersAttr(p)
 	p.authMidAttr.Init(logger, p.authService, p.sessionUser)
 
 	mux := mux.NewRouter()
@@ -127,6 +117,22 @@ func (p *ServerAttr) Init() error {
 	}
 
 	return nil
+}
+
+func initHandlersAttr(attr *ServerAttr) {
+	attr.loginAttr = &loginattr.LoginAttr{}
+	attr.rigsterAttr = &registerattr.RegisterAttr{}
+	attr.setOrderAttr = &setorderattr.SetOrderAttr{}
+	attr.getOrderAttr = &getorderattr.GetOrderAttr{}
+	attr.balanceAttr = &balanceattr.BalanceAttr{}
+	attr.withdraAttr = &withdrawattr.WithdrawAttr{}
+	attr.authMidAttr = &authmiddlewareattr.AuthMiddlewareAttr{}
+	attr.setOrderAttr.Init(attr.zapLogger, attr.sessionUser)
+	attr.getOrderAttr.Init(attr.zapLogger, attr.sessionUser)
+	attr.balanceAttr.Init(attr.zapLogger, attr.sessionUser)
+	attr.withdraAttr.Init(attr.zapLogger, attr.sessionUser)
+	attr.loginAttr.Init(attr.zapLogger)
+	attr.rigsterAttr.Init(attr.zapLogger)
 }
 
 func initAPIMethods(
@@ -151,7 +157,7 @@ func initAPIMethods(
 	setOrder := setorder.NewSetOrderHandler(
 		attr.orderSerice, attr.setOrderAttr).SetOrderHandler
 	withdraw := withdraw.NewWithdrawHandler(
-		attr.accountService).WithdrawHandler
+		attr.accountService, attr.withdraAttr).WithdrawHandler
 
 	setMethod(get, "orders", mux, attr, getOrder, true)
 	setMethod(get, "balance", mux, attr, balance, true)

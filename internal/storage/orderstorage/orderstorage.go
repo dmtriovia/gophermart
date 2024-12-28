@@ -25,7 +25,7 @@ func (m *OrderStorage) Initiate(
 const defUserData = "u.id,u.login,u.password,u.createddate"
 
 const defOrderData = "o.id, o.identifier, o.createddate, " +
-	"o.status, o.accrual"
+	"o.status, o.accrual, o.points_write_off"
 
 func (m *OrderStorage) CreateOrder(
 	ctx *context.Context,
@@ -56,8 +56,8 @@ func (m *OrderStorage) GetOrder(
 		outOrderID, outOrderAccrual, outUserID  int32
 		outOrderStatus, outOrderIdentifier      string
 		outOrderCreateddate, outUserCreateddate time.Time
-
-		outUserLogin, outUserPass string
+		outOrderPointsWriteOff                  float32
+		outUserLogin, outUserPass               string
 	)
 
 	err := m.conn.QueryRow(
@@ -70,6 +70,7 @@ func (m *OrderStorage) GetOrder(
 		&outOrderCreateddate,
 		&outOrderStatus,
 		&outOrderAccrual,
+		&outOrderPointsWriteOff,
 		&outUserID,
 		&outUserLogin,
 		&outUserPass,
@@ -95,7 +96,8 @@ func (m *OrderStorage) GetOrder(
 		outOrderIdentifier,
 		user,
 		outOrderCreateddate,
-		outOrderStatus, outOrderAccrual)
+		outOrderStatus, outOrderAccrual,
+		outOrderPointsWriteOff)
 
 	return order, nil
 }
@@ -109,6 +111,7 @@ func (m *OrderStorage) GetOrdersByClient(
 		outOrderStatus, outOrderIdentifier      string
 		outUserLogin, outUserPass               string
 		outUserCreateddate, outOrderCreateddate time.Time
+		outOrderPointsWriteOff                  float32
 	)
 
 	rows, err := m.conn.Query(
@@ -141,7 +144,8 @@ func (m *OrderStorage) GetOrdersByClient(
 		order := &ordermodel.Order{}
 		user := &usermodel.User{}
 		err = rows.Scan(&outOrderID, &outOrderIdentifier,
-			&outOrderCreateddate, &outOrderStatus, &outUserID,
+			&outOrderCreateddate, &outOrderAccrual,
+			&outOrderPointsWriteOff, &outOrderStatus, &outUserID,
 			&outUserLogin, &outUserPass, &outUserCreateddate)
 
 		if err != nil {
@@ -151,7 +155,8 @@ func (m *OrderStorage) GetOrdersByClient(
 				outUserLogin, outUserCreateddate)
 			order.SetOrder(
 				outOrderID, outOrderIdentifier, user,
-				outOrderCreateddate, outOrderStatus, outOrderAccrual)
+				outOrderCreateddate, outOrderStatus,
+				outOrderAccrual, outOrderPointsWriteOff)
 
 			orders = append(orders, *order)
 		}

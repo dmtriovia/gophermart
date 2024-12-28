@@ -1,30 +1,27 @@
 package withdraw
 
 import (
-	"fmt"
 	"net/http"
 
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/withdrawattr"
 	"github.com/dmitrovia/gophermart/internal/service"
 )
 
 type Withdraw struct {
 	serv service.AccountService
+	attr *withdrawattr.WithdrawAttr
 }
 
 func NewWithdrawHandler(
 	s service.AccountService,
+	inAttr *withdrawattr.WithdrawAttr,
 ) *Withdraw {
-	return &Withdraw{serv: s}
+	return &Withdraw{serv: s, attr: inAttr}
 }
 
 func (h *Withdraw) WithdrawHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	status := http.StatusOK
-
-	fmt.Println(writer)
-	fmt.Println(req)
-
-	writer.WriteHeader(status)
+	writer.WriteHeader(http.StatusOK)
 }

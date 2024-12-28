@@ -3,6 +3,7 @@ CREATE TABLE order (
    identifier varchar not null unique,
    client integer NOT NULL REFERENCES user(id),
    accrual integer,
+   points_write_off REAL,
    status varchar not null,
    createddate TIMESTAMP default now()
 );
