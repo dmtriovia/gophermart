@@ -8,6 +8,8 @@ import (
 
 type AccountService interface {
 	CreateAccount(account *accountmodel.Account) error
+	GetAccountByClient(clientID int32,
+	) (*accountmodel.Account, error)
 }
 
 type AuthService interface {

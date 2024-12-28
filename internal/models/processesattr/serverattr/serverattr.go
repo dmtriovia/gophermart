@@ -18,6 +18,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/middleware/authmiddleware"
 	"github.com/dmitrovia/gophermart/internal/middleware/loggermiddleware"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/balanceattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/getorderattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/loginattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/registerattr"
@@ -62,6 +63,7 @@ type ServerAttr struct {
 	rigsterAttr          *registerattr.RegisterAttr
 	setOrderAttr         *setorderattr.SetOrderAttr
 	getOrderAttr         *getorderattr.GetOrderAttr
+	balanceAttr          *balanceattr.BalanceAttr
 	authMidAttr          *authmiddlewareattr.AuthMiddlewareAttr
 	sessionUser          *usermodel.User
 }
@@ -69,8 +71,7 @@ type ServerAttr struct {
 func (p *ServerAttr) Init() error {
 	p.sessionUser = &usermodel.User{}
 	p.defPORT = "localhost:8080"
-	p.defAccSysAddr = ""
-	p.defDatabaseURL = ""
+	p.defAccSysAddr, p.defDatabaseURL = "", ""
 	p.validAddrPattern = "^[a-zA-Z/ ]{1,100}:[0-9]{1,10}$"
 	p.waitSecRespDB = 10
 	p.defReadTimeout = 15
@@ -105,10 +106,11 @@ func (p *ServerAttr) Init() error {
 	p.rigsterAttr = &registerattr.RegisterAttr{}
 	p.setOrderAttr = &setorderattr.SetOrderAttr{}
 	p.getOrderAttr = &getorderattr.GetOrderAttr{}
+	p.balanceAttr = &balanceattr.BalanceAttr{}
 	p.authMidAttr = &authmiddlewareattr.AuthMiddlewareAttr{}
-
 	p.setOrderAttr.Init(logger, p.sessionUser)
 	p.getOrderAttr.Init(logger, p.sessionUser)
+	p.balanceAttr.Init(logger, p.sessionUser)
 	p.loginAttr.Init(logger)
 	p.rigsterAttr.Init(logger)
 	p.authMidAttr.Init(logger, p.authService, p.sessionUser)
@@ -136,8 +138,8 @@ func initAPIMethods(
 
 	getOrder := getorder.NewGetOrderHandler(
 		attr.orderSerice, attr.getOrderAttr).GetOrderHandler
-	balance := balance.NewGetOrderHandler(
-		attr.accountService).BalanceHandler
+	balance := balance.NewBalanceHandler(
+		attr.accountService, attr.balanceAttr).BalanceHandler
 	withdrawals := withdrawals.NewWithdrawalsHandler(
 		attr.accountService).WithdrawalsHandler
 	hNotAllowed := notallowed.NotAllowed{}

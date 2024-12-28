@@ -35,4 +35,9 @@ type OrderStorage interface {
 type AccountStorage interface {
 	CreateAccount(ctx *context.Context,
 		account *accountmodel.Account) error
+
+	GetAccountByClient(
+		ctx *context.Context,
+		clientID int32,
+	) (*accountmodel.Account, error)
 }

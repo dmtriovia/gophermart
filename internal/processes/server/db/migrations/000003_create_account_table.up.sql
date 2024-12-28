@@ -2,7 +2,7 @@ CREATE TABLE account (
    id serial primary key,
    points REAL,
    withdrawn REAL,
-   client integer NOT NULL REFERENCES user(id),
+   client integer unique NOT NULL REFERENCES user(id),
    createddate TIMESTAMP default now()
 );
 

@@ -22,3 +22,8 @@ type OutGetOrder struct {
 	Status      string    `json:"status"`
 	Accrual     int32     `json:"accrual,omitempty"`
 }
+
+type OutBalance struct {
+	Points    float32 `json:"current"`
+	Withdrawn float32 `json:"withdrawn"`
+}
