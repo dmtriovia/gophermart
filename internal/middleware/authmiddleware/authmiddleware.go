@@ -125,7 +125,9 @@ func setSessionUserData(user *usermodel.User,
 		user.GetID(),
 		user.GetLogin(),
 		user.GetPassword(),
-		user.GetCreateddate())
+		user.GetCreateddate(),
+		user.GetPoints(),
+		user.GetWithdrawn())
 }
 
 func parseToken(inToken string,

@@ -22,15 +22,24 @@ func (m *PostgreStorage) Initiate(
 	m.conn = conn
 }
 
+const defUserData = "u.id, u.login, u.password, " +
+	"u.createddate, u.points, u.withdrawn"
+
+const defOrderData = "o.id, o.identifier, o.createddate, " +
+	"o.status, o.accrual"
+
 func (m *PostgreStorage) CreateUser(
 	ctx *context.Context,
 	user *usermodel.User,
 ) error {
 	_, err := m.conn.Exec(
 		*ctx,
-		"INSERT INTO user (login, password) VALUES ($1, $2)",
+		"INSERT INTO user (login, password,points,withdrawn)"+
+			" VALUES ($1, $2, $3, $4)",
 		user.GetLogin(),
-		user.GetPassword())
+		user.GetPassword(),
+		user.GetPoints(),
+		user.GetWithdrawn())
 	if err != nil {
 		return fmt.Errorf(
 			"CreateUser->INSERT INTO error: %w", err)
@@ -46,18 +55,19 @@ func (m *PostgreStorage) GetUser(
 	user := &usermodel.User{}
 
 	var (
-		outID          int32
-		outLogin       string
-		outPass        string
-		outCreateddate time.Time
+		outID                   int32
+		outLogin, outPass       string
+		outCreateddate          time.Time
+		outPoints, outWithdrawn float32
 	)
 
 	err := m.conn.QueryRow(
 		*ctx,
-		"select id, login, password, createddate"+
-			"from user"+
-			"where login=$1 LIMIT 1",
-		login).Scan(&outID, &outLogin, &outPass, &outCreateddate)
+		"select "+defUserData+
+			" from user u"+
+			" where login=$1 LIMIT 1",
+		login).Scan(&outID, &outLogin, &outPass,
+		&outCreateddate, &outPoints, &outWithdrawn)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, sql.ErrNoRows
@@ -73,6 +83,8 @@ func (m *PostgreStorage) GetUser(
 		outPass,
 		outLogin,
 		outCreateddate,
+		outPoints,
+		outWithdrawn,
 	)
 
 	return user, nil
@@ -84,8 +96,10 @@ func (m *PostgreStorage) CreateOrder(
 ) error {
 	_, err := m.conn.Exec(
 		*ctx,
-		"INSERT INTO order (identifier,client) VALUES ($1,$2)",
-		order.GetIdentifier(), order.GetClient().GetID())
+		"INSERT INTO order (identifier,client,"+
+			" accrual,status) VALUES ($1,$2,$3,$4)",
+		order.GetIdentifier(), order.GetClient().GetID(),
+		order.GetAccrual(), order.GetStatus())
 	if err != nil {
 		return fmt.Errorf(
 			"CreateOrder->INSERT INTO error: %w", err)
@@ -102,23 +116,16 @@ func (m *PostgreStorage) GetOrder(
 	user := &usermodel.User{}
 
 	var (
-		outOrderID          int32
-		outOrderStatus      string
-		outOrderIdentifier  string
-		outOrderCreateddate time.Time
-		outOrderAccrual     int32
+		outOrderID, outOrderAccrual, outUserID  int32
+		outOrderStatus, outOrderIdentifier      string
+		outOrderCreateddate, outUserCreateddate time.Time
+		outUserPoints, outUserWithdrawn         float32
 
-		outUserID          int32
-		outUserLogin       string
-		outUserPass        string
-		outUserCreateddate time.Time
+		outUserLogin, outUserPass string
 	)
 
 	err := m.conn.QueryRow(
-		*ctx,
-		"select o.id,o.identifier,o.createddate,o.status,"+
-			"o.accrual,"+
-			" u.id, u.login, u.password, u.createddate"+
+		*ctx, "select "+defOrderData+","+defUserData+
 			" from order o"+
 			" left join user u on u.id = order.client"+
 			" where o.identifier=$1 LIMIT 1",
@@ -130,7 +137,9 @@ func (m *PostgreStorage) GetOrder(
 		&outUserID,
 		&outUserLogin,
 		&outUserPass,
-		&outUserCreateddate)
+		&outUserCreateddate,
+		&outUserPoints,
+		&outUserWithdrawn)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, sql.ErrNoRows
@@ -145,7 +154,9 @@ func (m *PostgreStorage) GetOrder(
 	user.SetUser(outUserID,
 		outUserPass,
 		outUserLogin,
-		outUserCreateddate)
+		outUserCreateddate,
+		outUserPoints,
+		outUserWithdrawn)
 
 	order.SetOrder(
 		outOrderID,
@@ -166,13 +177,11 @@ func (m *PostgreStorage) GetOrdersByClient(
 		outOrderStatus, outOrderIdentifier      string
 		outUserLogin, outUserPass               string
 		outUserCreateddate, outOrderCreateddate time.Time
+		outUserPoints, ouUserWithdrawn          float32
 	)
 
 	rows, err := m.conn.Query(
-		*ctx,
-		"select o.id,o.identifier,o.createddate,o.status,"+
-			"o.accrual,"+
-			" u.id, u.login, u.password, u.createddate"+
+		*ctx, "select "+defOrderData+","+defUserData+
 			" from order o"+
 			" left join user u on u.id = o.client"+
 			" where o.client=$1"+
@@ -202,13 +211,15 @@ func (m *PostgreStorage) GetOrdersByClient(
 		user := &usermodel.User{}
 		err = rows.Scan(&outOrderID, &outOrderIdentifier,
 			&outOrderCreateddate, &outOrderStatus, &outUserID,
-			&outUserLogin, &outUserPass, &outUserCreateddate)
+			&outUserLogin, &outUserPass, &outUserCreateddate,
+			&outUserPoints, &ouUserWithdrawn)
 
 		if err != nil {
 			errors = append(errors, err)
 		} else {
 			user.SetUser(outUserID, outUserPass,
-				outUserLogin, outUserCreateddate)
+				outUserLogin, outUserCreateddate,
+				outUserPoints, ouUserWithdrawn)
 			order.SetOrder(
 				outOrderID, outOrderIdentifier, user,
 				outOrderCreateddate, outOrderStatus, outOrderAccrual)

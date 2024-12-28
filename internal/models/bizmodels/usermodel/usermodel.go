@@ -7,6 +7,8 @@ type User struct {
 	login       string
 	password    string
 	createddate time.Time
+	points      float32
+	withdrawn   float32
 }
 
 func (u *User) SetUser(
@@ -14,11 +16,15 @@ func (u *User) SetUser(
 	login string,
 	password string,
 	createddate time.Time,
+	points float32,
+	withdrawn float32,
 ) {
 	u.id = idDB
 	u.login = login
 	u.password = password
 	u.createddate = createddate
+	u.points = points
+	u.withdrawn = withdrawn
 }
 
 func (u *User) SetLogin(
@@ -47,4 +53,12 @@ func (u *User) GetPassword() string {
 
 func (u *User) GetCreateddate() time.Time {
 	return u.createddate
+}
+
+func (u *User) GetWithdrawn() float32 {
+	return u.withdrawn
+}
+
+func (u *User) GetPoints() float32 {
+	return u.points
 }
