@@ -10,6 +10,7 @@ import (
 
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/models/apimodels"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/registerattr"
 	"github.com/dmitrovia/gophermart/internal/service"
@@ -18,8 +19,9 @@ import (
 )
 
 type Register struct {
-	serv service.AuthService
-	attr *registerattr.RegisterAttr
+	authService    service.AuthService
+	accountService service.AccountService
+	attr           *registerattr.RegisterAttr
 }
 
 var errEmptyData = errors.New("data is empty")
@@ -30,10 +32,15 @@ const (
 )
 
 func NewRegisterHandler(
-	s service.AuthService,
+	authS service.AuthService,
+	accS service.AccountService,
 	inAttr *registerattr.RegisterAttr,
 ) *Register {
-	return &Register{serv: s, attr: inAttr}
+	return &Register{
+		authService:    authS,
+		accountService: accS,
+		attr:           inAttr,
+	}
 }
 
 func (h *Register) RegisterHandler(
@@ -56,7 +63,7 @@ func (h *Register) RegisterHandler(
 		return
 	}
 
-	exist, _, err := h.serv.UserIsExist(regUser.Login)
+	exist, _, err := h.authService.UserIsExist(regUser.Login)
 	if err != nil {
 		setErr(writer, h.attr, err, statusISE, "UserIsExist")
 
@@ -69,18 +76,7 @@ func (h *Register) RegisterHandler(
 		return
 	}
 
-	passwHash, err := cryptPass(regUser.Password)
-	if err != nil {
-		setErr(writer, h.attr, err, statusISE, "cryptPass")
-
-		return
-	}
-
-	user := &usermodel.User{}
-	user.SetLogin(regUser.Login)
-	user.SetPassword(passwHash)
-
-	err = h.serv.CreateUser(user)
+	err = CreateUser(h, regUser)
 	if err != nil {
 		setErr(writer, h.attr, err, statusISE, "CreateUser")
 
@@ -96,6 +92,37 @@ func (h *Register) RegisterHandler(
 
 	writer.Header().Set("Authorization", token)
 	writer.WriteHeader(http.StatusOK)
+}
+
+func CreateUser(handler *Register,
+	regUser *apimodels.InRegisterUser,
+) error {
+	passwHash, err := cryptPass(regUser.Password)
+	if err != nil {
+		return fmt.Errorf(
+			"CreateUser->cryptPass %w", err)
+	}
+
+	user := &usermodel.User{}
+	user.SetLogin(regUser.Login)
+	user.SetPassword(passwHash)
+
+	err = handler.authService.CreateUser(user)
+	if err != nil {
+		return fmt.Errorf(
+			"CreateUser->authService.CreateUser %w", err)
+	}
+
+	acc := &accountmodel.Account{}
+	acc.SetClient(user)
+
+	err = handler.accountService.CreateAccount(acc)
+	if err != nil {
+		return fmt.Errorf(
+			"CreateUser->accountService.CreateAccount %w", err)
+	}
+
+	return nil
 }
 
 func setErr(writer http.ResponseWriter,

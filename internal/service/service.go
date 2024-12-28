@@ -1,11 +1,14 @@
 package service
 
 import (
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
 )
 
-type AccountService interface{}
+type AccountService interface {
+	CreateAccount(account *accountmodel.Account) error
+}
 
 type AuthService interface {
 	UserIsExist(login string) (bool, *usermodel.User, error)

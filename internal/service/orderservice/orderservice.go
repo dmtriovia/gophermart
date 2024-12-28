@@ -12,7 +12,7 @@ import (
 )
 
 type OrderService struct {
-	repository  storage.Storage
+	repository  storage.OrderStorage
 	ctxDuration time.Duration
 }
 
@@ -20,7 +20,7 @@ func GetOrdersByClient() {
 }
 
 func NewOrderService(
-	stor storage.Storage, ctxDur int,
+	stor storage.OrderStorage, ctxDur int,
 ) *OrderService {
 	return &OrderService{
 		repository:  stor,

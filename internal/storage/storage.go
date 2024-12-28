@@ -3,11 +3,12 @@ package storage
 import (
 	"context"
 
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
 )
 
-type Storage interface {
+type UserStorage interface {
 	GetUser(
 		ctx *context.Context,
 		login string) (*usermodel.User, error)
@@ -15,7 +16,9 @@ type Storage interface {
 	CreateUser(
 		ctx *context.Context,
 		user *usermodel.User) error
+}
 
+type OrderStorage interface {
 	GetOrder(
 		ctx *context.Context,
 		ident string) (*ordermodel.Order, error)
@@ -27,4 +30,9 @@ type Storage interface {
 	CreateOrder(
 		ctx *context.Context,
 		user *ordermodel.Order) error
+}
+
+type AccountStorage interface {
+	CreateAccount(ctx *context.Context,
+		account *accountmodel.Account) error
 }

@@ -1,4 +1,4 @@
-package postgrestorage
+package orderstorage
 
 import (
 	"context"
@@ -12,85 +12,22 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type PostgreStorage struct {
+type OrderStorage struct {
 	conn *pgx.Conn
 }
 
-func (m *PostgreStorage) Initiate(
+func (m *OrderStorage) Initiate(
 	conn *pgx.Conn,
 ) {
 	m.conn = conn
 }
 
-const defUserData = "u.id, u.login, u.password, " +
-	"u.createddate, u.points, u.withdrawn"
+const defUserData = "u.id,u.login,u.password,u.createddate"
 
 const defOrderData = "o.id, o.identifier, o.createddate, " +
 	"o.status, o.accrual"
 
-func (m *PostgreStorage) CreateUser(
-	ctx *context.Context,
-	user *usermodel.User,
-) error {
-	_, err := m.conn.Exec(
-		*ctx,
-		"INSERT INTO user (login, password,points,withdrawn)"+
-			" VALUES ($1, $2, $3, $4)",
-		user.GetLogin(),
-		user.GetPassword(),
-		user.GetPoints(),
-		user.GetWithdrawn())
-	if err != nil {
-		return fmt.Errorf(
-			"CreateUser->INSERT INTO error: %w", err)
-	}
-
-	return nil
-}
-
-func (m *PostgreStorage) GetUser(
-	ctx *context.Context,
-	login string,
-) (*usermodel.User, error) {
-	user := &usermodel.User{}
-
-	var (
-		outID                   int32
-		outLogin, outPass       string
-		outCreateddate          time.Time
-		outPoints, outWithdrawn float32
-	)
-
-	err := m.conn.QueryRow(
-		*ctx,
-		"select "+defUserData+
-			" from user u"+
-			" where login=$1 LIMIT 1",
-		login).Scan(&outID, &outLogin, &outPass,
-		&outCreateddate, &outPoints, &outWithdrawn)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, sql.ErrNoRows
-	}
-
-	if err != nil {
-		return nil,
-			fmt.Errorf("GetUser->m.conn.QueryRow %w",
-				err)
-	}
-
-	user.SetUser(outID,
-		outPass,
-		outLogin,
-		outCreateddate,
-		outPoints,
-		outWithdrawn,
-	)
-
-	return user, nil
-}
-
-func (m *PostgreStorage) CreateOrder(
+func (m *OrderStorage) CreateOrder(
 	ctx *context.Context,
 	order *ordermodel.Order,
 ) error {
@@ -108,7 +45,7 @@ func (m *PostgreStorage) CreateOrder(
 	return nil
 }
 
-func (m *PostgreStorage) GetOrder(
+func (m *OrderStorage) GetOrder(
 	ctx *context.Context,
 	ident string,
 ) (*ordermodel.Order, error) {
@@ -119,7 +56,6 @@ func (m *PostgreStorage) GetOrder(
 		outOrderID, outOrderAccrual, outUserID  int32
 		outOrderStatus, outOrderIdentifier      string
 		outOrderCreateddate, outUserCreateddate time.Time
-		outUserPoints, outUserWithdrawn         float32
 
 		outUserLogin, outUserPass string
 	)
@@ -137,9 +73,7 @@ func (m *PostgreStorage) GetOrder(
 		&outUserID,
 		&outUserLogin,
 		&outUserPass,
-		&outUserCreateddate,
-		&outUserPoints,
-		&outUserWithdrawn)
+		&outUserCreateddate)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, sql.ErrNoRows
@@ -154,9 +88,7 @@ func (m *PostgreStorage) GetOrder(
 	user.SetUser(outUserID,
 		outUserPass,
 		outUserLogin,
-		outUserCreateddate,
-		outUserPoints,
-		outUserWithdrawn)
+		outUserCreateddate)
 
 	order.SetOrder(
 		outOrderID,
@@ -168,7 +100,7 @@ func (m *PostgreStorage) GetOrder(
 	return order, nil
 }
 
-func (m *PostgreStorage) GetOrdersByClient(
+func (m *OrderStorage) GetOrdersByClient(
 	ctx *context.Context,
 	clientID int32,
 ) (*[]ordermodel.Order, *[]error, error) {
@@ -177,7 +109,6 @@ func (m *PostgreStorage) GetOrdersByClient(
 		outOrderStatus, outOrderIdentifier      string
 		outUserLogin, outUserPass               string
 		outUserCreateddate, outOrderCreateddate time.Time
-		outUserPoints, ouUserWithdrawn          float32
 	)
 
 	rows, err := m.conn.Query(
@@ -211,15 +142,13 @@ func (m *PostgreStorage) GetOrdersByClient(
 		user := &usermodel.User{}
 		err = rows.Scan(&outOrderID, &outOrderIdentifier,
 			&outOrderCreateddate, &outOrderStatus, &outUserID,
-			&outUserLogin, &outUserPass, &outUserCreateddate,
-			&outUserPoints, &ouUserWithdrawn)
+			&outUserLogin, &outUserPass, &outUserCreateddate)
 
 		if err != nil {
 			errors = append(errors, err)
 		} else {
 			user.SetUser(outUserID, outUserPass,
-				outUserLogin, outUserCreateddate,
-				outUserPoints, ouUserWithdrawn)
+				outUserLogin, outUserCreateddate)
 			order.SetOrder(
 				outOrderID, outOrderIdentifier, user,
 				outOrderCreateddate, outOrderStatus, outOrderAccrual)

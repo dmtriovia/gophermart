@@ -26,7 +26,9 @@ import (
 	"github.com/dmitrovia/gophermart/internal/service/accountservice"
 	"github.com/dmitrovia/gophermart/internal/service/authservice"
 	"github.com/dmitrovia/gophermart/internal/service/orderservice"
-	"github.com/dmitrovia/gophermart/internal/storage/postgrestorage"
+	"github.com/dmitrovia/gophermart/internal/storage/accountstorage"
+	"github.com/dmitrovia/gophermart/internal/storage/orderstorage"
+	"github.com/dmitrovia/gophermart/internal/storage/userstorage"
 	"github.com/gorilla/mux"
 	"github.com/jackc/pgx/v5"
 	"go.uber.org/zap"
@@ -43,7 +45,9 @@ type ServerAttr struct {
 	server               *http.Server
 	zapLogger            *zap.Logger
 	zapLogLevel          string
-	postgreStorage       *postgrestorage.PostgreStorage
+	orderStorage         *orderstorage.OrderStorage
+	userStorage          *userstorage.UserStorage
+	accountStorage       *accountstorage.AccountStorage
 	accountService       *accountservice.AccountService
 	authService          *authservice.AuthService
 	orderSerice          *orderservice.OrderService
@@ -74,14 +78,18 @@ func (p *ServerAttr) Init() error {
 	p.defIdleTimeout = 60
 	p.apiURL = "/api/user/"
 	p.migrationsDir = "db/migrations"
-	p.postgreStorage = &postgrestorage.PostgreStorage{}
-	p.postgreStorage.Initiate(p.pgxConn)
+	p.accountStorage = &accountstorage.AccountStorage{}
+	p.orderStorage = &orderstorage.OrderStorage{}
+	p.userStorage = &userstorage.UserStorage{}
+	p.accountStorage.Initiate(p.pgxConn)
+	p.accountStorage.Initiate(p.pgxConn)
+	p.userStorage.Initiate(p.pgxConn)
 	p.accountService = accountservice.NewAccountService(
-		p.postgreStorage, p.waitSecRespDB)
+		p.accountStorage, p.waitSecRespDB)
 	p.authService = authservice.NewAuthService(
-		p.postgreStorage, p.waitSecRespDB)
+		p.userStorage, p.waitSecRespDB)
 	p.orderSerice = orderservice.NewOrderService(
-		p.postgreStorage, p.waitSecRespDB)
+		p.orderStorage, p.waitSecRespDB)
 	p.zapLogLevel = "info"
 
 	logger, err := logger.Initialize(p.zapLogLevel)
@@ -134,7 +142,8 @@ func initAPIMethods(
 		attr.accountService).WithdrawalsHandler
 	hNotAllowed := notallowed.NotAllowed{}
 	register := register.NewRegisterHandler(
-		attr.authService, attr.rigsterAttr).RegisterHandler
+		attr.authService, attr.accountService,
+		attr.rigsterAttr).RegisterHandler
 	login := login.NewLoginHandler(
 		attr.authService, attr.loginAttr).LoginHandler
 	setOrder := setorder.NewSetOrderHandler(
