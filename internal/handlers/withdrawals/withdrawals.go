@@ -1,30 +1,30 @@
 package withdrawals
 
 import (
-	"fmt"
 	"net/http"
 
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/withdrawalsattr"
 	"github.com/dmitrovia/gophermart/internal/service"
 )
 
 type Withdrawals struct {
-	serv service.AccountService
+	orderService service.OrderService
+	attr         *withdrawalsattr.WithdrawalsAttr
 }
 
 func NewWithdrawalsHandler(
-	s service.AccountService,
+	ords service.OrderService,
+	inAttr *withdrawalsattr.WithdrawalsAttr,
 ) *Withdrawals {
-	return &Withdrawals{serv: s}
+	return &Withdrawals{
+		orderService: ords,
+		attr:         inAttr,
+	}
 }
 
 func (h *Withdrawals) WithdrawalsHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	status := http.StatusOK
-
-	fmt.Println(writer)
-	fmt.Println(req)
-
-	writer.WriteHeader(status)
+	writer.WriteHeader(http.StatusOK)
 }

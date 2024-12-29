@@ -23,6 +23,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/loginattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/registerattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/setorderattr"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/withdrawalsattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/withdrawattr"
 	"github.com/dmitrovia/gophermart/internal/models/middlewareattr/authmiddlewareattr"
 	"github.com/dmitrovia/gophermart/internal/service/accountservice"
@@ -62,12 +63,13 @@ type ServerAttr struct {
 	defIdleTimeout       int
 	apiURL               string
 	migrationsDir        string
+	withdrawalsAttr      *withdrawalsattr.WithdrawalsAttr
 	loginAttr            *loginattr.LoginAttr
 	rigsterAttr          *registerattr.RegisterAttr
 	setOrderAttr         *setorderattr.SetOrderAttr
 	getOrderAttr         *getorderattr.GetOrderAttr
 	balanceAttr          *balanceattr.BalanceAttr
-	withdraAttr          *withdrawattr.WithdrawAttr
+	withdrawAttr         *withdrawattr.WithdrawAttr
 	authMidAttr          *authmiddlewareattr.AuthMiddlewareAttr
 	sessionUser          *usermodel.User
 }
@@ -105,6 +107,7 @@ func (p *ServerAttr) Init() error {
 
 	p.zapLogger = logger
 	initHandlersAttr(p)
+	p.withdrawalsAttr = &withdrawalsattr.WithdrawalsAttr{}
 	p.authMidAttr.Init(logger, p.authService, p.sessionUser)
 
 	mux := mux.NewRouter()
@@ -127,14 +130,17 @@ func initHandlersAttr(attr *ServerAttr) {
 	attr.setOrderAttr = &setorderattr.SetOrderAttr{}
 	attr.getOrderAttr = &getorderattr.GetOrderAttr{}
 	attr.balanceAttr = &balanceattr.BalanceAttr{}
-	attr.withdraAttr = &withdrawattr.WithdrawAttr{}
+	attr.withdrawAttr = &withdrawattr.WithdrawAttr{}
 	attr.authMidAttr = &authmiddlewareattr.AuthMiddlewareAttr{}
+
+	attr.loginAttr.Init(attr.zapLogger)
+	attr.rigsterAttr.Init(attr.zapLogger)
+
 	attr.setOrderAttr.Init(attr.zapLogger, attr.sessionUser)
 	attr.getOrderAttr.Init(attr.zapLogger, attr.sessionUser)
 	attr.balanceAttr.Init(attr.zapLogger, attr.sessionUser)
-	attr.withdraAttr.Init(attr.zapLogger, attr.sessionUser)
-	attr.loginAttr.Init(attr.zapLogger)
-	attr.rigsterAttr.Init(attr.zapLogger)
+	attr.withdrawAttr.Init(attr.zapLogger, attr.sessionUser)
+	attr.withdrawalsAttr.Init(attr.zapLogger, attr.sessionUser)
 }
 
 func initAPIMethods(
@@ -149,7 +155,7 @@ func initAPIMethods(
 	balance := balance.NewBalanceHandler(
 		attr.accountService, attr.balanceAttr).BalanceHandler
 	withdrawals := withdrawals.NewWithdrawalsHandler(
-		attr.accountService).WithdrawalsHandler
+		attr.orderSerice, attr.withdrawalsAttr).WithdrawalsHandler
 	hNotAllowed := notallowed.NotAllowed{}
 	register := register.NewRegisterHandler(
 		attr.authService, attr.accountService,
@@ -160,7 +166,7 @@ func initAPIMethods(
 		attr.orderSerice, attr.setOrderAttr).SetOrderHandler
 	withdraw := withdraw.NewWithdrawHandler(
 		attr.accountService, attr.orderSerice,
-		attr.calculateService, attr.withdraAttr).WithdrawHandler
+		attr.calculateService, attr.withdrawAttr).WithdrawHandler
 
 	setMethod(get, "orders", mux, attr, getOrder, true)
 	setMethod(get, "balance", mux, attr, balance, true)

@@ -32,3 +32,9 @@ type InWithdraw struct {
 	PointsWriteOff  float32 `json:"sum"`
 	OrderIdentifier string  `json:"order"`
 }
+
+type OutWithdrawals struct {
+	PointsWriteOff  float32   `json:"sum"`
+	OrderIdentifier string    `json:"order"`
+	Createddate     time.Time `json:"processed_at"`
+}
