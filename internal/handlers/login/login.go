@@ -38,7 +38,7 @@ func (h *Login) LoginHandler(
 
 	err := getReqData(req, regUser)
 	if err != nil {
-		writer.WriteHeader(http.StatusBadRequest)
+		writer.WriteHeader(http.StatusInternalServerError)
 		logger.DoInfoLogFromErr("login->getReqData",
 			err, h.attr.GetLogger())
 
@@ -48,8 +48,6 @@ func (h *Login) LoginHandler(
 	isValid := validate(regUser)
 	if !isValid {
 		writer.WriteHeader(http.StatusBadRequest)
-		logger.DoInfoLogFromErr("login->validate",
-			err, h.attr.GetLogger())
 
 		return
 	}

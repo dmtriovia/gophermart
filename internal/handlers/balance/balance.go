@@ -27,7 +27,7 @@ func (h *Balance) BalanceHandler(
 	writer http.ResponseWriter,
 	_ *http.Request,
 ) {
-	balance, err := GetBalanceByClient(h)
+	balance, err := getBalanceByClient(h)
 	if err != nil {
 		logger.DoInfoLogFromErr(
 			"BalanceHandler->GetBalanceByClient",
@@ -61,7 +61,7 @@ func (h *Balance) BalanceHandler(
 	writer.WriteHeader(http.StatusOK)
 }
 
-func GetBalanceByClient(
+func getBalanceByClient(
 	handler *Balance,
 ) (*apimodels.OutBalance, error) {
 	balance := &apimodels.OutBalance{}

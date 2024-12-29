@@ -28,7 +28,7 @@ func (h *GetOrders) GetOrderHandler(
 	writer http.ResponseWriter,
 	_ *http.Request,
 ) {
-	orders, err := GetOrdersByClient(h)
+	orders, err := getOrdersByClient(h)
 	if err != nil {
 		logger.DoInfoLogFromErr(
 			"GetOrderHandler->GetOrdersByClient",
@@ -66,7 +66,7 @@ func (h *GetOrders) GetOrderHandler(
 	writer.WriteHeader(http.StatusOK)
 }
 
-func GetOrdersByClient(
+func getOrdersByClient(
 	handler *GetOrders,
 ) (*[]ordermodel.Order, error) {
 	orders, scanErrors, err := handler.serv.GetOrdersByClient(

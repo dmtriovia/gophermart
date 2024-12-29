@@ -28,7 +28,6 @@ var errEmptyData = errors.New("data is empty")
 
 const (
 	statusISE = http.StatusInternalServerError
-	statusBR  = http.StatusBadRequest
 )
 
 func NewRegisterHandler(
@@ -51,21 +50,21 @@ func (h *Register) RegisterHandler(
 
 	err := getReqData(req, regUser)
 	if err != nil {
-		setErr(writer, h.attr, err, statusBR, "getReqData")
+		setErr(writer, h.attr, err, "getReqData")
 
 		return
 	}
 
 	isValid := validate(regUser)
 	if !isValid {
-		setErr(writer, h.attr, err, statusBR, "validate")
+		writer.WriteHeader(http.StatusBadRequest)
 
 		return
 	}
 
 	exist, _, err := h.authService.UserIsExist(regUser.Login)
 	if err != nil {
-		setErr(writer, h.attr, err, statusISE, "UserIsExist")
+		setErr(writer, h.attr, err, "UserIsExist")
 
 		return
 	}
@@ -76,16 +75,16 @@ func (h *Register) RegisterHandler(
 		return
 	}
 
-	err = CreateUser(h, regUser)
+	err = createUser(h, regUser)
 	if err != nil {
-		setErr(writer, h.attr, err, statusISE, "CreateUser")
+		setErr(writer, h.attr, err, "CreateUser")
 
 		return
 	}
 
 	token, err := generateToken(regUser.Login, h.attr)
 	if err != nil {
-		setErr(writer, h.attr, err, statusISE, "generateToken")
+		setErr(writer, h.attr, err, "generateToken")
 
 		return
 	}
@@ -94,7 +93,7 @@ func (h *Register) RegisterHandler(
 	writer.WriteHeader(http.StatusOK)
 }
 
-func CreateUser(handler *Register,
+func createUser(handler *Register,
 	regUser *apimodels.InRegisterUser,
 ) error {
 	passwHash, err := cryptPass(regUser.Password)
@@ -128,10 +127,9 @@ func CreateUser(handler *Register,
 func setErr(writer http.ResponseWriter,
 	inAttr *registerattr.RegisterAttr,
 	err error,
-	status int,
 	method string,
 ) {
-	writer.WriteHeader(status)
+	writer.WriteHeader(statusISE)
 	logger.DoInfoLogFromErr("register->"+method,
 		err, inAttr.GetLogger())
 }

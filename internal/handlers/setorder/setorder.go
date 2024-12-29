@@ -37,7 +37,7 @@ func (h *SetOrders) SetOrderHandler(
 
 	err := getReqData(req, reqOrder)
 	if err != nil {
-		writer.WriteHeader(http.StatusBadRequest)
+		writer.WriteHeader(http.StatusInternalServerError)
 		logger.DoInfoLogFromErr("SetOrderHandler->getReqData",
 			err, h.attr.GetLogger())
 
@@ -47,8 +47,6 @@ func (h *SetOrders) SetOrderHandler(
 	isValid := validate(reqOrder, h.attr)
 	if !isValid {
 		writer.WriteHeader(http.StatusUnprocessableEntity)
-		logger.DoInfoLogFromErr("SetOrderHandler->validate",
-			err, h.attr.GetLogger())
 
 		return
 	}

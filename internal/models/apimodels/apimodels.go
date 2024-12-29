@@ -28,7 +28,7 @@ type OutBalance struct {
 	Withdrawn float32 `json:"withdrawn"`
 }
 
-type inWithdraw struct {
+type InWithdraw struct {
 	PointsWriteOff  float32 `json:"sum"`
 	OrderIdentifier string  `json:"order"`
 }

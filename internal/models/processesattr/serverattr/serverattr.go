@@ -157,7 +157,8 @@ func initAPIMethods(
 	setOrder := setorder.NewSetOrderHandler(
 		attr.orderSerice, attr.setOrderAttr).SetOrderHandler
 	withdraw := withdraw.NewWithdrawHandler(
-		attr.accountService, attr.withdraAttr).WithdrawHandler
+		attr.accountService, attr.orderSerice,
+		attr.withdraAttr).WithdrawHandler
 
 	setMethod(get, "orders", mux, attr, getOrder, true)
 	setMethod(get, "balance", mux, attr, balance, true)
