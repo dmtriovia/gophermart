@@ -92,7 +92,7 @@ func (h *Withdraw) WithdrawHandler(
 		return
 	}
 
-	err = calculatePoints(h, acc, reqWithdraw)
+	err = calculatePoints(h, acc, order, reqWithdraw)
 	if err != nil {
 		setErr(writer, h.attr, err, "calculatePoints")
 
@@ -115,10 +115,12 @@ func setErr(writer http.ResponseWriter,
 func calculatePoints(
 	handler *Withdraw,
 	acc *accountmodel.Account,
+	order *ordermodel.Order,
 	withdraw *apimodels.InWithdraw,
 ) error {
 	err := handler.calculateService.CalculatePoints(
 		acc,
+		order,
 		withdraw.PointsWriteOff)
 	if err != nil {
 		return fmt.Errorf(

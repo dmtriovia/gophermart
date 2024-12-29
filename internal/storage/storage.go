@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accounthistorymodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
@@ -58,4 +59,7 @@ type AccountStorage interface {
 		accID int32,
 		newValuePoints float32,
 	) (bool, error)
+
+	CreateAccountHistory(ctx *context.Context,
+		account *accounthistorymodel.AccountHistory) error
 }

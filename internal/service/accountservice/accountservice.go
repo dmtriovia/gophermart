@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accounthistorymodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/storage"
 	"github.com/jackc/pgx/v5"
@@ -40,6 +41,24 @@ func (s *AccountService) CreateAccount(
 	if err != nil {
 		return fmt.Errorf(
 			"CreateAccount->s.repository.CreateAccount: %w",
+			err)
+	}
+
+	return nil
+}
+
+func (s *AccountService) CreateAccountHistory(
+	accHist *accounthistorymodel.AccountHistory,
+) error {
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		s.ctxDuration)
+	defer cancel()
+
+	err := s.accRepo.CreateAccountHistory(&ctx, accHist)
+	if err != nil {
+		return fmt.Errorf(
+			"CreateAccountHistory->accRepo.CreateAccountHistory: %w",
 			err)
 	}
 

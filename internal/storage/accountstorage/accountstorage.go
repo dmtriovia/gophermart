@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accounthistorymodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
 	"github.com/jackc/pgx/v5"
@@ -82,6 +83,23 @@ func (m *AccountStorage) CreateAccount(
 	if err != nil {
 		return fmt.Errorf(
 			"CreateAccount->INSERT INTO error: %w", err)
+	}
+
+	return nil
+}
+
+func (m *AccountStorage) CreateAccountHistory(
+	ctx *context.Context,
+	accHist *accounthistorymodel.AccountHistory,
+) error {
+	_, err := m.conn.Exec(
+		*ctx,
+		"INSERT INTO account_history (points_write_off,order)"+
+			" VALUES ($1,$2)",
+		accHist.GetpointsWriteOff(), accHist.GetOrder().GetID())
+	if err != nil {
+		return fmt.Errorf(
+			"CreateAccountHistory->INSERT INTO error: %w", err)
 	}
 
 	return nil

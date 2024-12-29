@@ -1,4 +1,4 @@
-package accounthistory
+package accounthistorymodel
 
 import (
 	"time"
@@ -13,7 +13,7 @@ type AccountHistory struct {
 	createddate    time.Time
 }
 
-func (u *AccountHistory) SetAccount(
+func (u *AccountHistory) SetAccountHistory(
 	idDB int32,
 	order *ordermodel.Order,
 	createddate time.Time,
@@ -39,4 +39,12 @@ func (u *AccountHistory) GetpointsWriteOff() float32 {
 
 func (u *AccountHistory) GetOrder() *ordermodel.Order {
 	return u.order
+}
+
+func (u *AccountHistory) SetpointsWriteOff(points float32) {
+	u.pointsWriteOff = points
+}
+
+func (u *AccountHistory) SetOrder(order *ordermodel.Order) {
+	u.order = order
 }

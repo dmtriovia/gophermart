@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accounthistorymodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
 	"github.com/dmitrovia/gophermart/internal/storage"
 	"github.com/jackc/pgx/v5"
 )
@@ -31,6 +33,7 @@ func NewCalculateService(
 
 func (s *CalculateService) CalculatePoints(
 	acc *accountmodel.Account,
+	order *ordermodel.Order,
 	points float32,
 ) error {
 	ctx, cancel := context.WithTimeout(
@@ -67,9 +70,36 @@ func (s *CalculateService) CalculatePoints(
 			err)
 	}
 
+	err = CreateAccountHistory(s, &ctx, order, points)
+	if err != nil {
+		return fmt.Errorf(
+			"CalculatePoints->CreateAccountHistory: %w",
+			err)
+	}
+
 	err = tranz.Commit(ctx)
 	if err != nil {
 		return fmt.Errorf("CalculatePoints->tranz.Commit %w", err)
+	}
+
+	return nil
+}
+
+func CreateAccountHistory(
+	service *CalculateService,
+	ctx *context.Context,
+	order *ordermodel.Order,
+	points float32,
+) error {
+	accHist := accounthistorymodel.AccountHistory{}
+	accHist.SetOrder(order)
+	accHist.SetpointsWriteOff(points)
+
+	err := service.accRepo.CreateAccountHistory(ctx, &accHist)
+	if err != nil {
+		return fmt.Errorf(
+			"CreateAccountHistory->accRepo.CreateAccountHistory %w",
+			err)
 	}
 
 	return nil
