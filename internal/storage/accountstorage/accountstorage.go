@@ -25,14 +25,14 @@ const defUserData = "u.id,u.login,u.password,u.createddate"
 const defAccountData = "a.id,a.points,a.withdrawn," +
 	"a.client,a.createddate"
 
-func (m *AccountStorage) UpdateAccountPointsByID(
+func (m *AccountStorage) MinusPointsByID(
 	ctx *context.Context,
 	accID int32,
 	newValuePoints float32,
 ) (bool, error) {
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE account SET points=$1 where id=$2",
+		"UPDATE account SET points=points-$1 where id=$2",
 		newValuePoints,
 		accID)
 	if err != nil {
@@ -47,14 +47,14 @@ func (m *AccountStorage) UpdateAccountPointsByID(
 	return true, nil
 }
 
-func (m *AccountStorage) UpdateAccountWithdrawnByID(
+func (m *AccountStorage) PlusWithdrawnByID(
 	ctx *context.Context,
 	accID int32,
 	newValueWithdrawn float32,
 ) (bool, error) {
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE account SET withdrawn=$1 where id=$2",
+		"UPDATE account SET withdrawn=withdrawn+$1 where id=$2",
 		newValueWithdrawn,
 		accID)
 	if err != nil {

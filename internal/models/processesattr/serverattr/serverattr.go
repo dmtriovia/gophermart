@@ -27,6 +27,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/models/middlewareattr/authmiddlewareattr"
 	"github.com/dmitrovia/gophermart/internal/service/accountservice"
 	"github.com/dmitrovia/gophermart/internal/service/authservice"
+	"github.com/dmitrovia/gophermart/internal/service/calculateservice"
 	"github.com/dmitrovia/gophermart/internal/service/orderservice"
 	"github.com/dmitrovia/gophermart/internal/storage/accountstorage"
 	"github.com/dmitrovia/gophermart/internal/storage/orderstorage"
@@ -53,6 +54,7 @@ type ServerAttr struct {
 	accountService       *accountservice.AccountService
 	authService          *authservice.AuthService
 	orderSerice          *orderservice.OrderService
+	calculateService     *calculateservice.CalculateService
 	pgxConn              *pgx.Conn
 	waitSecRespDB        int
 	defReadTimeout       int
@@ -158,7 +160,7 @@ func initAPIMethods(
 		attr.orderSerice, attr.setOrderAttr).SetOrderHandler
 	withdraw := withdraw.NewWithdrawHandler(
 		attr.accountService, attr.orderSerice,
-		attr.withdraAttr).WithdrawHandler
+		attr.calculateService, attr.withdraAttr).WithdrawHandler
 
 	setMethod(get, "orders", mux, attr, getOrder, true)
 	setMethod(get, "balance", mux, attr, balance, true)

@@ -45,14 +45,16 @@ func (m *OrderStorage) CreateOrder(
 	return nil
 }
 
-func (m *OrderStorage) UpdateOrderPointsWriteOffByID(
+func (m *OrderStorage) PlusPointsWriteOffByID(
 	ctx *context.Context,
 	orderID int32,
 	newValuePointsWriteOff float32,
 ) (bool, error) {
+	t := "points_write_off"
+
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE order SET points_write_off=$1 where id=$2",
+		"UPDATE order SET "+t+"="+t+"+$1 where id=$2",
 		newValuePointsWriteOff,
 		orderID)
 	if err != nil {

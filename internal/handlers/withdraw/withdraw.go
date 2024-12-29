@@ -23,20 +23,23 @@ const (
 )
 
 type Withdraw struct {
-	orderService   service.OrderService
-	accountService service.AccountService
-	attr           *withdrawattr.WithdrawAttr
+	orderService     service.OrderService
+	calculateService service.CalculateService
+	accountService   service.AccountService
+	attr             *withdrawattr.WithdrawAttr
 }
 
 func NewWithdrawHandler(
 	accs service.AccountService,
 	ords service.OrderService,
+	calcs service.CalculateService,
 	inAttr *withdrawattr.WithdrawAttr,
 ) *Withdraw {
 	return &Withdraw{
-		accountService: accs,
-		orderService:   ords,
-		attr:           inAttr,
+		accountService:   accs,
+		orderService:     ords,
+		calculateService: calcs,
+		attr:             inAttr,
 	}
 }
 
@@ -77,7 +80,7 @@ func (h *Withdraw) WithdrawHandler(
 
 	acc, err := getAccountByClient(h)
 	if err != nil {
-		setErr(writer, h.attr, err, "getAccByClient")
+		setErr(writer, h.attr, err, "getAccountByClient")
 
 		return
 	}
@@ -89,9 +92,9 @@ func (h *Withdraw) WithdrawHandler(
 		return
 	}
 
-	err = calculatePoints(h, acc, order, reqWithdraw)
+	err = calculatePoints(h, acc, reqWithdraw)
 	if err != nil {
-		setErr(writer, h.attr, err, "writeOffPoints")
+		setErr(writer, h.attr, err, "calculatePoints")
 
 		return
 	}
@@ -112,12 +115,10 @@ func setErr(writer http.ResponseWriter,
 func calculatePoints(
 	handler *Withdraw,
 	acc *accountmodel.Account,
-	order *ordermodel.Order,
 	withdraw *apimodels.InWithdraw,
 ) error {
-	err := handler.accountService.CalculatePoints(
+	err := handler.calculateService.CalculatePoints(
 		acc,
-		order,
 		withdraw.PointsWriteOff)
 	if err != nil {
 		return fmt.Errorf(
