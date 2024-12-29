@@ -48,6 +48,14 @@ func (u *Account) GetPoints() float32 {
 	return u.points
 }
 
+func (u *Account) SetPoints(points float32) {
+	u.points = points
+}
+
+func (u *Account) SetWithdrawn(withdrawn float32) {
+	u.withdrawn = withdrawn
+}
+
 func (u *Account) GetClient() *usermodel.User {
 	return u.client
 }

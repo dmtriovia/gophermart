@@ -16,9 +16,6 @@ type OrderService struct {
 	ctxDuration time.Duration
 }
 
-func GetOrdersByClient() {
-}
-
 func NewOrderService(
 	stor storage.OrderStorage, ctxDur int,
 ) *OrderService {

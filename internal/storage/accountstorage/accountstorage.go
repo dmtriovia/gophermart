@@ -25,6 +25,50 @@ const defUserData = "u.id,u.login,u.password,u.createddate"
 const defAccountData = "a.id,a.points,a.withdrawn," +
 	"a.client,a.createddate"
 
+func (m *AccountStorage) UpdateAccountPointsByID(
+	ctx *context.Context,
+	accID int32,
+	newValuePoints float32,
+) (bool, error) {
+	rows, err := m.conn.Exec(
+		*ctx,
+		"UPDATE account SET points=$1 where id=$2",
+		newValuePoints,
+		accID)
+	if err != nil {
+		return false, fmt.Errorf(
+			"UpdateAccountPoints->m.conn.Exec( %w", err)
+	}
+
+	if rows.RowsAffected() == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (m *AccountStorage) UpdateAccountWithdrawnByID(
+	ctx *context.Context,
+	accID int32,
+	newValueWithdrawn float32,
+) (bool, error) {
+	rows, err := m.conn.Exec(
+		*ctx,
+		"UPDATE account SET withdrawn=$1 where id=$2",
+		newValueWithdrawn,
+		accID)
+	if err != nil {
+		return false, fmt.Errorf(
+			"UpdateAccountWithdrawnByID->m.conn.Exec( %w", err)
+	}
+
+	if rows.RowsAffected() == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 func (m *AccountStorage) CreateAccount(
 	ctx *context.Context,
 	account *accountmodel.Account,

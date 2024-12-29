@@ -10,6 +10,12 @@ type AccountService interface {
 	CreateAccount(account *accountmodel.Account) error
 	GetAccountByClient(clientID int32,
 	) (*accountmodel.Account, error)
+
+	CalculatePoints(
+		acc *accountmodel.Account,
+		order *ordermodel.Order,
+		points float32,
+	) error
 }
 
 type AuthService interface {

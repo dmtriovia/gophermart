@@ -30,6 +30,12 @@ type OrderStorage interface {
 	CreateOrder(
 		ctx *context.Context,
 		user *ordermodel.Order) error
+
+	UpdateOrderPointsWriteOffByID(
+		ctx *context.Context,
+		orderID int32,
+		newValuePointsWriteOff float32,
+	) (bool, error)
 }
 
 type AccountStorage interface {
@@ -40,4 +46,16 @@ type AccountStorage interface {
 		ctx *context.Context,
 		clientID int32,
 	) (*accountmodel.Account, error)
+
+	UpdateAccountWithdrawnByID(
+		ctx *context.Context,
+		accID int32,
+		newValueWithdrawn float32,
+	) (bool, error)
+
+	UpdateAccountPointsByID(
+		ctx *context.Context,
+		accID int32,
+		newValuePoints float32,
+	) (bool, error)
 }

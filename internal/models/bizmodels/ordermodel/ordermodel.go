@@ -46,6 +46,10 @@ func (o *Order) GetpointsWriteOff() float32 {
 	return o.pointsWriteOff
 }
 
+func (o *Order) SetpointsWriteOff(points float32) {
+	o.pointsWriteOff = points
+}
+
 func (o *Order) SetStatus(status string) {
 	o.status = status
 }

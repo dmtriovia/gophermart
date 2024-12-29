@@ -87,7 +87,7 @@ func (p *ServerAttr) Init() error {
 	p.accountStorage.Initiate(p.pgxConn)
 	p.userStorage.Initiate(p.pgxConn)
 	p.accountService = accountservice.NewAccountService(
-		p.accountStorage, p.waitSecRespDB)
+		p.accountStorage, p.waitSecRespDB, p.pgxConn)
 	p.authService = authservice.NewAuthService(
 		p.userStorage, p.waitSecRespDB)
 	p.orderSerice = orderservice.NewOrderService(
