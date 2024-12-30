@@ -93,10 +93,10 @@ func formResponeBody(
 
 	for _, order := range *orders {
 		tmp := apimodels.OutGetOrder{}
-		tmp.Identifier = order.GetIdentifier()
-		tmp.Accrual = order.GetAccrual()
-		tmp.Status = order.GetStatus()
-		tmp.Createddate = order.GetCreateddate()
+		tmp.SetOutGetOrder(order.GetIdentifier(),
+			order.GetCreateddate(),
+			order.GetStatus(),
+			order.GetAccrual())
 
 		marshal = append(marshal, tmp)
 	}

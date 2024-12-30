@@ -99,9 +99,10 @@ func formResponeBody(
 
 	for _, hist := range *accHists {
 		tmp := apimodels.OutWithdrawals{}
-		tmp.OrderIdentifier = hist.GetOrder().GetIdentifier()
-		tmp.PointsWriteOff = hist.GetpointsWriteOff()
-		tmp.Createddate = hist.GetCreateddate()
+		tmp.SetOutWithdrawals(
+			hist.GetpointsWriteOff(),
+			hist.GetOrder().GetIdentifier(),
+			hist.GetCreateddate())
 
 		marshal = append(marshal, tmp)
 	}

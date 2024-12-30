@@ -74,8 +74,7 @@ func getBalanceByClient(
 			err)
 	}
 
-	balance.Points = acc.GetPoints()
-	balance.Withdrawn = acc.GetWithdrawn()
+	balance.SetOutBalance(acc.GetPoints(), acc.GetWithdrawn())
 
 	return balance, nil
 }
