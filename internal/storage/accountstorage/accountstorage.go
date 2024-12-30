@@ -45,7 +45,7 @@ func (m *AccountStorage) MinusPointsByID(
 		accID)
 	if err != nil {
 		return false, fmt.Errorf(
-			"UpdateAccountPoints->m.conn.Exec( %w", err)
+			"MinusPointsByID->m.conn.Exec( %w", err)
 	}
 
 	if rows.RowsAffected() == 0 {
@@ -67,7 +67,7 @@ func (m *AccountStorage) PlusWithdrawnByID(
 		accID)
 	if err != nil {
 		return false, fmt.Errorf(
-			"UpdateAccountWithdrawnByID->m.conn.Exec( %w", err)
+			"PlusWithdrawnByID->m.conn.Exec( %w", err)
 	}
 
 	if rows.RowsAffected() == 0 {

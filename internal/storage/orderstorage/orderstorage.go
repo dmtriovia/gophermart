@@ -59,7 +59,7 @@ func (m *OrderStorage) PlusPointsWriteOffByID(
 		orderID)
 	if err != nil {
 		return false, fmt.Errorf(
-			"UpdateOrderPointsWriteOffByID->m.conn.Exec( %w", err)
+			"PlusPointsWriteOffByID->m.conn.Exec( %w", err)
 	}
 
 	if rows.RowsAffected() == 0 {
@@ -147,7 +147,7 @@ func (m *OrderStorage) GetOrdersByClient(
 		clientID)
 	if err != nil {
 		return nil, nil, fmt.Errorf(
-			"GetOrderByClient->m.conn.Query %w", err)
+			"GetOrdersByClient->m.conn.Query %w", err)
 	}
 
 	defer rows.Close()

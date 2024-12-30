@@ -26,7 +26,7 @@ func RunProcess() {
 
 	err := attr.Init()
 	if err != nil {
-		fmt.Println("RunProcess->attr.Init: %w", err)
+		fmt.Println("RP->attr.Init: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(
@@ -38,7 +38,7 @@ func RunProcess() {
 	err = UseMigrations(attr)
 	if err != nil {
 		logger.DoInfoLogFromErr(
-			"UseMigrations", err, attr.GetLogger())
+			"RP->UseMigrations", err, attr.GetLogger())
 
 		return
 	}
@@ -46,7 +46,7 @@ func RunProcess() {
 	err = attr.SetPgxConn(ctx)
 	if err != nil {
 		logger.DoInfoLogFromErr(
-			"SetPgxConn", err, attr.GetLogger())
+			"RP->SetPgxConn", err, attr.GetLogger())
 
 		return
 	}
@@ -56,7 +56,7 @@ func RunProcess() {
 	err = initSystemAttrs(attr)
 	if err != nil {
 		logger.DoInfoLogFromErr(
-			"initSystemAttrs", err, attr.GetLogger())
+			"RP->initSystemAttrs", err, attr.GetLogger())
 
 		return
 	}
@@ -64,7 +64,7 @@ func RunProcess() {
 	err = runServer(attr)
 	if err != nil {
 		logger.DoInfoLogFromErr(
-			"runServer", err, attr.GetLogger())
+			"RP->runServer", err, attr.GetLogger())
 
 		return
 	}
@@ -117,7 +117,7 @@ func runServer(attr *serverattr.ServerAttr) error {
 	err := attr.GetServer().ListenAndServe()
 	if err != nil {
 		return fmt.Errorf(
-			"runServer->GetServer().ListenAndServe() %w", err)
+			"runServer->GetServer.ListenAndServe %w", err)
 	}
 
 	return nil
