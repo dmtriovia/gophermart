@@ -13,6 +13,10 @@ type AccountService interface {
 	) (*accountmodel.Account, error)
 	CreateAccountHistory(
 		account *accounthistorymodel.AccountHistory) error
+	GetAccountHistoryByClient(
+		clientID int32) (*[]accounthistorymodel.AccountHistory,
+		*[]error,
+		error)
 }
 
 type AuthService interface {

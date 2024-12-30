@@ -82,3 +82,25 @@ func (s *AccountService) GetAccountByClient(
 
 	return acc, nil
 }
+
+func (s *AccountService) GetAccountHistoryByClient(
+	clientID int32,
+) (*[]accounthistorymodel.AccountHistory,
+	*[]error,
+	error,
+) {
+	ctx, cancel := context.WithTimeout(
+		context.Background(),
+		s.ctxDuration)
+	defer cancel()
+
+	accHists,
+		errors,
+		err := s.accRepo.GetAccountHistoryByClient(
+		&ctx,
+		clientID)
+
+	return accHists, errors, fmt.Errorf(
+		"GetAccountHistoryByClient->GetAccHistByClient: %w",
+		err)
+}

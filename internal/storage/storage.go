@@ -62,4 +62,10 @@ type AccountStorage interface {
 
 	CreateAccountHistory(ctx *context.Context,
 		account *accounthistorymodel.AccountHistory) error
+
+	GetAccountHistoryByClient(
+		ctx *context.Context,
+		clientID int32) (*[]accounthistorymodel.AccountHistory,
+		*[]error,
+		error)
 }

@@ -155,7 +155,8 @@ func initAPIMethods(
 	balance := balance.NewBalanceHandler(
 		attr.accountService, attr.balanceAttr).BalanceHandler
 	withdrawals := withdrawals.NewWithdrawalsHandler(
-		attr.orderSerice, attr.withdrawalsAttr).WithdrawalsHandler
+		attr.accountService,
+		attr.withdrawalsAttr).WithdrawalsHandler
 	hNotAllowed := notallowed.NotAllowed{}
 	register := register.NewRegisterHandler(
 		attr.authService, attr.accountService,
