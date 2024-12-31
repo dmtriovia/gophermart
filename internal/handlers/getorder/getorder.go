@@ -5,44 +5,58 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dmitrovia/gophermart/internal/functions/validatef"
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/models/apimodels"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/getorderattr"
 	"github.com/dmitrovia/gophermart/internal/service"
+	"github.com/gorilla/mux"
 )
 
-type GetOrders struct {
-	serv service.OrderService
-	attr *getorderattr.GetOrderAttr
+type GetOrder struct {
+	orderService service.OrderService
+	attr         *getorderattr.GetOrderAttr
 }
 
 func NewGetOrderHandler(
 	s service.OrderService,
 	inAttr *getorderattr.GetOrderAttr,
-) *GetOrders {
-	return &GetOrders{serv: s, attr: inAttr}
+) *GetOrder {
+	return &GetOrder{orderService: s, attr: inAttr}
 }
 
-func (h *GetOrders) GetOrderHandler(
+func (h *GetOrder) GetOrderHandler(
 	writer http.ResponseWriter,
-	_ *http.Request,
+	req *http.Request,
 ) {
-	orders, err := getOrdersByClient(h)
-	if err != nil {
-		logger.DoInfoLogFromErr(
-			"GetOrderHandler->GetOrdersByClient",
-			err, h.attr.GetLogger())
-		writer.WriteHeader(http.StatusInternalServerError)
+	reqAttr := &apimodels.InGetOrder{}
+
+	getReqData(req, reqAttr)
+
+	isValid := validate(reqAttr, h.attr)
+	if !isValid {
+		writer.WriteHeader(http.StatusUnprocessableEntity)
 
 		return
 	}
 
-	if len(*orders) == 0 {
-		writer.WriteHeader(http.StatusNoContent)
+	isExist, order, err := orderIsExist(h, reqAttr)
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		logger.DoInfoLogFromErr("GetOrderHandler->orderIsExist",
+			err, h.attr.GetLogger())
+
+		return
 	}
 
-	marshal, err := formResponeBody(orders)
+	if !isExist {
+		writer.WriteHeader(http.StatusNoContent)
+
+		return
+	}
+
+	marshal, err := formResponeBody(order)
 	if err != nil {
 		logger.DoInfoLogFromErr(
 			"GetOrderHandler->formResponeBody",
@@ -66,47 +80,56 @@ func (h *GetOrders) GetOrderHandler(
 	writer.WriteHeader(http.StatusOK)
 }
 
-func getOrdersByClient(
-	handler *GetOrders,
-) (*[]ordermodel.Order, error) {
-	orders, scanErrors, err := handler.serv.GetOrdersByClient(
-		handler.attr.GetSessionUser().GetID())
+func orderIsExist(
+	handler *GetOrder,
+	reqAttr *apimodels.InGetOrder,
+) (bool, *ordermodel.Order, error) {
+	isExist, order, err := handler.orderService.OrderIsExist(
+		reqAttr.Identifier)
 	if err != nil {
-		return nil, fmt.Errorf(
-			"GetOrdersByClient->GetOrdersByClient: %w",
+		return false, nil, fmt.Errorf(
+			"OrderIsExist->orderService.OrderIsExist: %w",
 			err)
 	}
 
-	if len(*scanErrors) != 0 {
-		logger.DoInfoLogFromErr(
-			"GetOrdersByClient->GetOrdersByClient",
-			err, handler.attr.GetLogger())
+	if isExist {
+		return true, order, nil
 	}
 
-	return orders, nil
+	return false, nil, nil
+}
+
+func getReqData(
+	req *http.Request,
+	reqAttr *apimodels.InGetOrder,
+) {
+	reqAttr.Identifier = mux.Vars(req)["number"]
+}
+
+func validate(reqAttr *apimodels.InGetOrder,
+	attr *getorderattr.GetOrderAttr,
+) bool {
+	res, _ := validatef.IsMatchesTemplate(
+		reqAttr.Identifier, attr.GetValidIdentOrderPattern())
+
+	return res
 }
 
 func formResponeBody(
-	orders *[]ordermodel.Order,
+	order *ordermodel.Order,
 ) (*[]byte, error) {
-	marshal := make([]apimodels.OutGetOrder, 0, len(*orders))
+	outOrder := &apimodels.OutGetOrder{}
+	outOrder.SetOutGetOrder(
+		order.GetIdentifier(),
+		order.GetStatus(),
+		order.GetAccrual())
 
-	for _, order := range *orders {
-		tmp := apimodels.OutGetOrder{}
-		tmp.SetOutGetOrder(order.GetIdentifier(),
-			order.GetCreateddate(),
-			order.GetStatus(),
-			order.GetAccrual())
-
-		marshal = append(marshal, tmp)
-	}
-
-	ordersMarshall, err := json.Marshal(marshal)
+	orderMarshall, err := json.Marshal(outOrder)
 	if err != nil {
 		return nil,
 			fmt.Errorf("formResponeBody->Marshal: %w",
 				err)
 	}
 
-	return &ordersMarshall, nil
+	return &orderMarshall, nil
 }

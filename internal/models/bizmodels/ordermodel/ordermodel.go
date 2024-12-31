@@ -6,7 +6,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
 )
 
-const OrderStatusNew string = "NEW"
+const OrderStatusRegistered string = "REGISTERED"
 
 const OrderStatusProcessing string = "PROCESSING"
 

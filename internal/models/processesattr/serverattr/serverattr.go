@@ -8,6 +8,7 @@ import (
 
 	"github.com/dmitrovia/gophermart/internal/handlers/balance"
 	"github.com/dmitrovia/gophermart/internal/handlers/getorder"
+	"github.com/dmitrovia/gophermart/internal/handlers/getorders"
 	"github.com/dmitrovia/gophermart/internal/handlers/login"
 	"github.com/dmitrovia/gophermart/internal/handlers/notallowed"
 	"github.com/dmitrovia/gophermart/internal/handlers/register"
@@ -20,6 +21,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/balanceattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/getorderattr"
+	"github.com/dmitrovia/gophermart/internal/models/handlerattr/getordersattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/loginattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/registerattr"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/setorderattr"
@@ -67,6 +69,7 @@ type ServerAttr struct {
 	loginAttr            *loginattr.LoginAttr
 	rigsterAttr          *registerattr.RegisterAttr
 	setOrderAttr         *setorderattr.SetOrderAttr
+	getOrdersAttr        *getordersattr.GetOrdersAttr
 	getOrderAttr         *getorderattr.GetOrderAttr
 	balanceAttr          *balanceattr.BalanceAttr
 	withdrawAttr         *withdrawattr.WithdrawAttr
@@ -128,6 +131,7 @@ func initHandlersAttr(attr *ServerAttr) {
 	attr.loginAttr = &loginattr.LoginAttr{}
 	attr.rigsterAttr = &registerattr.RegisterAttr{}
 	attr.setOrderAttr = &setorderattr.SetOrderAttr{}
+	attr.getOrdersAttr = &getordersattr.GetOrdersAttr{}
 	attr.getOrderAttr = &getorderattr.GetOrderAttr{}
 	attr.balanceAttr = &balanceattr.BalanceAttr{}
 	attr.withdrawAttr = &withdrawattr.WithdrawAttr{}
@@ -137,7 +141,8 @@ func initHandlersAttr(attr *ServerAttr) {
 	attr.rigsterAttr.Init(attr.zapLogger)
 
 	attr.setOrderAttr.Init(attr.zapLogger, attr.sessionUser)
-	attr.getOrderAttr.Init(attr.zapLogger, attr.sessionUser)
+	attr.getOrdersAttr.Init(attr.zapLogger, attr.sessionUser)
+	attr.getOrderAttr.Init(attr.GetLogger(), attr.sessionUser)
 	attr.balanceAttr.Init(attr.zapLogger, attr.sessionUser)
 	attr.withdrawAttr.Init(attr.zapLogger, attr.sessionUser)
 	attr.withdrawalsAttr.Init(attr.zapLogger, attr.sessionUser)
@@ -150,8 +155,10 @@ func initAPIMethods(
 	get := http.MethodGet
 	post := http.MethodPost
 
-	getOrder := getorder.NewGetOrderHandler(
-		attr.orderSerice, attr.getOrderAttr).GetOrderHandler
+	getOrders := getorders.NewGetOrdersHandler(
+		attr.orderSerice, attr.getOrdersAttr).GetOrderHandler
+	getOrder := getorder.NewGetOrderHandler(attr.orderSerice,
+		attr.getOrderAttr).GetOrderHandler
 	balance := balance.NewBalanceHandler(
 		attr.accountService, attr.balanceAttr).BalanceHandler
 	withdrawals := withdrawals.NewWithdrawalsHandler(
@@ -169,7 +176,9 @@ func initAPIMethods(
 		attr.accountService, attr.orderSerice,
 		attr.calculateService, attr.withdrawAttr).WithdrawHandler
 
-	setMethod(get, "orders", mux, attr, getOrder, true)
+	setMethod(get, "orders", mux, attr, getOrders, true)
+	setMethod(get, "orders/{number}", mux, attr, getOrder,
+		true)
 	setMethod(get, "balance", mux, attr, balance, true)
 	setMethod(get, "withdrawals", mux, attr, withdrawals, true)
 	setMethod(post, "register", mux, attr, register, false)

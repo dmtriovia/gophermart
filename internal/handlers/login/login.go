@@ -34,9 +34,9 @@ func (h *Login) LoginHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	regUser := &apimodels.InLoginUser{}
+	reqAttr := &apimodels.InLoginUser{}
 
-	err := getReqData(req, regUser)
+	err := getReqData(req, reqAttr)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		logger.DoInfoLogFromErr("login->getReqData",
@@ -45,14 +45,14 @@ func (h *Login) LoginHandler(
 		return
 	}
 
-	isValid := validate(regUser)
+	isValid := validate(reqAttr)
 	if !isValid {
 		writer.WriteHeader(http.StatusBadRequest)
 
 		return
 	}
 
-	exist, user, err := h.serv.UserIsExist(regUser.Login)
+	exist, user, err := h.serv.UserIsExist(reqAttr.Login)
 	if err != nil {
 		writer.WriteHeader(http.StatusUnauthorized)
 		logger.DoInfoLogFromErr("login->UserIsExist",
@@ -67,7 +67,7 @@ func (h *Login) LoginHandler(
 		return
 	}
 
-	err = checkPass(user.GetPassword(), regUser.Password)
+	err = checkPass(user.GetPassword(), reqAttr.Password)
 	if err != nil {
 		writer.WriteHeader(http.StatusUnauthorized)
 		logger.DoInfoLogFromErr("login->checkPass",
@@ -76,7 +76,7 @@ func (h *Login) LoginHandler(
 		return
 	}
 
-	token, err := generateToken(regUser.Login, h.attr)
+	token, err := generateToken(reqAttr.Login, h.attr)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		logger.DoInfoLogFromErr("login->generateToken",
@@ -123,8 +123,8 @@ func checkPass(hash string, pass string) error {
 	return nil
 }
 
-func validate(user *apimodels.InLoginUser) bool {
-	if user.Login == "" || user.Password == "" {
+func validate(reqAttr *apimodels.InLoginUser) bool {
+	if reqAttr.Login == "" || reqAttr.Password == "" {
 		return false
 	}
 
@@ -133,7 +133,7 @@ func validate(user *apimodels.InLoginUser) bool {
 
 func getReqData(
 	req *http.Request,
-	user *apimodels.InLoginUser,
+	reqAttr *apimodels.InLoginUser,
 ) error {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -144,7 +144,7 @@ func getReqData(
 		return fmt.Errorf("getReqData: %w", errEmptyData)
 	}
 
-	err = json.Unmarshal(body, user)
+	err = json.Unmarshal(body, reqAttr)
 	if err != nil {
 		return fmt.Errorf("getReqData->json.Unmarshal %w", err)
 	}

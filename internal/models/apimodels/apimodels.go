@@ -21,14 +21,14 @@ type InWithdraw struct {
 	OrderIdentifier string  `json:"order"`
 }
 
-type OutGetOrder struct {
+type OutGetOrders struct {
 	Identifier  string    `json:"number"`
 	Createddate time.Time `json:"uploaded_at"`
 	Status      string    `json:"status"`
 	Accrual     int32     `json:"accrual,omitempty"`
 }
 
-func (o *OutGetOrder) SetOutGetOrder(
+func (o *OutGetOrders) SetOutGetOrders(
 	identifier string,
 	createddate time.Time,
 	status string,
@@ -67,4 +67,24 @@ func (o *OutWithdrawals) SetOutWithdrawals(
 	o.PointsWriteOff = pointsWriteOff
 	o.OrderIdentifier = orderIdentifier
 	o.Createddate = createddate
+}
+
+type InGetOrder struct {
+	Identifier string
+}
+
+type OutGetOrder struct {
+	Identifier string `json:"number"`
+	Status     string `json:"status"`
+	Accrual    int32  `json:"accrual,omitempty"`
+}
+
+func (o *OutGetOrder) SetOutGetOrder(
+	identifier string,
+	status string,
+	accrual int32,
+) {
+	o.Identifier = identifier
+	o.Status = status
+	o.Accrual = accrual
 }

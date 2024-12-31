@@ -47,23 +47,23 @@ func (h *Withdraw) WithdrawHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	reqWithdraw := &apimodels.InWithdraw{}
+	reqAttr := &apimodels.InWithdraw{}
 
-	err := getReqData(req, reqWithdraw)
+	err := getReqData(req, reqAttr)
 	if err != nil {
 		setErr(writer, h.attr, err, "getReqData")
 
 		return
 	}
 
-	isValid := validate(reqWithdraw, h.attr)
+	isValid := validate(reqAttr, h.attr)
 	if !isValid {
 		writer.WriteHeader(http.StatusUnprocessableEntity)
 
 		return
 	}
 
-	isExist, order, err := orderIsExist(h, reqWithdraw)
+	isExist, order, err := orderIsExist(h, reqAttr)
 	if err != nil {
 		setErr(writer, h.attr, err, "orderIsExist")
 
@@ -85,14 +85,14 @@ func (h *Withdraw) WithdrawHandler(
 		return
 	}
 
-	enough := checkEnoughFunds(acc, reqWithdraw)
+	enough := checkEnoughFunds(acc, reqAttr)
 	if !enough {
 		writer.WriteHeader(http.StatusPaymentRequired)
 
 		return
 	}
 
-	err = calculatePoints(h, acc, order, reqWithdraw)
+	err = calculatePoints(h, acc, order, reqAttr)
 	if err != nil {
 		setErr(writer, h.attr, err, "calculatePoints")
 
@@ -116,12 +116,12 @@ func calculatePoints(
 	handler *Withdraw,
 	acc *accountmodel.Account,
 	order *ordermodel.Order,
-	withdraw *apimodels.InWithdraw,
+	reqAttr *apimodels.InWithdraw,
 ) error {
 	err := handler.calculateService.CalculatePoints(
 		acc,
 		order,
-		withdraw.PointsWriteOff)
+		reqAttr.PointsWriteOff)
 	if err != nil {
 		return fmt.Errorf(
 			"calculatePoints->accountService.CalculatePoints: %w",
@@ -146,20 +146,20 @@ func getAccountByClient(
 }
 
 func checkEnoughFunds(acc *accountmodel.Account,
-	withdraw *apimodels.InWithdraw,
+	reqAttr *apimodels.InWithdraw,
 ) bool {
 	clientPoints := acc.GetPoints()
-	withdrawPoints := withdraw.PointsWriteOff
+	withdrawPoints := reqAttr.PointsWriteOff
 
 	return clientPoints >= withdrawPoints
 }
 
 func orderIsExist(
 	handler *Withdraw,
-	withdraw *apimodels.InWithdraw,
+	reqAttr *apimodels.InWithdraw,
 ) (bool, *ordermodel.Order, error) {
 	isExist, order, err := handler.orderService.OrderIsExist(
-		withdraw.OrderIdentifier)
+		reqAttr.OrderIdentifier)
 	if err != nil {
 		return false, nil, fmt.Errorf(
 			"OrderIsExist->orderService.OrderIsExist: %w",
@@ -175,7 +175,7 @@ func orderIsExist(
 
 func getReqData(
 	req *http.Request,
-	withdraw *apimodels.InWithdraw,
+	reqAttr *apimodels.InWithdraw,
 ) error {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -186,7 +186,7 @@ func getReqData(
 		return fmt.Errorf("getReqData: %w", errEmptyData)
 	}
 
-	err = json.Unmarshal(body, withdraw)
+	err = json.Unmarshal(body, reqAttr)
 	if err != nil {
 		return fmt.Errorf("getReqData->json.Unmarshal %w", err)
 	}
@@ -199,11 +199,11 @@ func getReqData(
 	return nil
 }
 
-func validate(withdraw *apimodels.InWithdraw,
+func validate(reqAttr *apimodels.InWithdraw,
 	attr *withdrawattr.WithdrawAttr,
 ) bool {
 	res, _ := validatef.IsMatchesTemplate(
-		withdraw.OrderIdentifier,
+		reqAttr.OrderIdentifier,
 		attr.GetValidIdentOrderPattern())
 
 	return res

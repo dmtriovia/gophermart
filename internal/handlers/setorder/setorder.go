@@ -33,9 +33,9 @@ func (h *SetOrders) SetOrderHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	reqOrder := &apimodels.InSetOrder{}
+	reqAttr := &apimodels.InSetOrder{}
 
-	err := getReqData(req, reqOrder)
+	err := getReqData(req, reqAttr)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		logger.DoInfoLogFromErr("SetOrderHandler->getReqData",
@@ -44,7 +44,7 @@ func (h *SetOrders) SetOrderHandler(
 		return
 	}
 
-	isValid := validate(reqOrder, h.attr)
+	isValid := validate(reqAttr, h.attr)
 	if !isValid {
 		writer.WriteHeader(http.StatusUnprocessableEntity)
 
@@ -52,7 +52,7 @@ func (h *SetOrders) SetOrderHandler(
 	}
 
 	exist, order, err := h.serv.OrderIsExist(
-		reqOrder.Identifier)
+		reqAttr.Identifier)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		logger.DoInfoLogFromErr("SetOrderHandler->OrderIsExist",
@@ -76,7 +76,7 @@ func (h *SetOrders) SetOrderHandler(
 		return
 	}
 
-	err = createOrder(reqOrder, h)
+	err = createOrder(reqAttr, h)
 	if err != nil {
 		writer.WriteHeader(http.StatusInternalServerError)
 		logger.DoInfoLogFromErr("SetOrderHandler->createOrder",
@@ -88,14 +88,14 @@ func (h *SetOrders) SetOrderHandler(
 	writer.WriteHeader(http.StatusAccepted)
 }
 
-func createOrder(reqOrder *apimodels.InSetOrder,
+func createOrder(reqAttr *apimodels.InSetOrder,
 	hand *SetOrders,
 ) error {
 	order := &ordermodel.Order{}
 
-	order.SetIdentifier(reqOrder.Identifier)
+	order.SetIdentifier(reqAttr.Identifier)
 	order.SetClient(hand.attr.GetSessionUser())
-	order.SetStatus(ordermodel.OrderStatusNew)
+	order.SetStatus(ordermodel.OrderStatusRegistered)
 
 	err := hand.serv.CreateOrder(order)
 	if err != nil {
@@ -106,18 +106,18 @@ func createOrder(reqOrder *apimodels.InSetOrder,
 	return nil
 }
 
-func validate(order *apimodels.InSetOrder,
+func validate(reqAttr *apimodels.InSetOrder,
 	attr *setorderattr.SetOrderAttr,
 ) bool {
 	res, _ := validatef.IsMatchesTemplate(
-		order.Identifier, attr.GetValidIdentOrderPattern())
+		reqAttr.Identifier, attr.GetValidIdentOrderPattern())
 
 	return res
 }
 
 func getReqData(
 	req *http.Request,
-	order *apimodels.InSetOrder,
+	reqAttr *apimodels.InSetOrder,
 ) error {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -128,7 +128,7 @@ func getReqData(
 		return fmt.Errorf("getReqData: %w", errEmptyData)
 	}
 
-	err = json.Unmarshal(body, order)
+	err = json.Unmarshal(body, reqAttr)
 	if err != nil {
 		return fmt.Errorf("getReqData->json.Unmarshal %w", err)
 	}

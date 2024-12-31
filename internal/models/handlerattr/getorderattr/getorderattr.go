@@ -6,8 +6,9 @@ import (
 )
 
 type GetOrderAttr struct {
-	zapLogger   *zap.Logger
-	sessionUser *usermodel.User
+	zapLogger              *zap.Logger
+	sessionUser            *usermodel.User
+	validIdentOrderPattern string
 }
 
 func (p *GetOrderAttr) Init(
@@ -16,6 +17,7 @@ func (p *GetOrderAttr) Init(
 ) {
 	p.zapLogger = logger
 	p.sessionUser = user
+	p.validIdentOrderPattern = "^[0-9]+$"
 }
 
 func (p *GetOrderAttr) GetLogger() *zap.Logger {
@@ -24,4 +26,8 @@ func (p *GetOrderAttr) GetLogger() *zap.Logger {
 
 func (p *GetOrderAttr) GetSessionUser() *usermodel.User {
 	return p.sessionUser
+}
+
+func (p *GetOrderAttr) GetValidIdentOrderPattern() string {
+	return p.validIdentOrderPattern
 }

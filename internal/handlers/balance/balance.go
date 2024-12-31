@@ -7,6 +7,7 @@ import (
 
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/models/apimodels"
+	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/models/handlerattr/balanceattr"
 	"github.com/dmitrovia/gophermart/internal/service"
 )
@@ -27,17 +28,17 @@ func (h *Balance) BalanceHandler(
 	writer http.ResponseWriter,
 	_ *http.Request,
 ) {
-	balance, err := getBalanceByClient(h)
+	acc, err := getAccountByClient(h)
 	if err != nil {
 		logger.DoInfoLogFromErr(
-			"BalanceHandler->GetBalanceByClient",
+			"BalanceHandler->getAccountByClient",
 			err, h.attr.GetLogger())
 		writer.WriteHeader(http.StatusInternalServerError)
 
 		return
 	}
 
-	marshal, err := formResponeBody(balance)
+	marshal, err := formResponeBody(acc)
 	if err != nil {
 		logger.DoInfoLogFromErr(
 			"BalanceHandler->formResponeBody",
@@ -61,11 +62,9 @@ func (h *Balance) BalanceHandler(
 	writer.WriteHeader(http.StatusOK)
 }
 
-func getBalanceByClient(
+func getAccountByClient(
 	handler *Balance,
-) (*apimodels.OutBalance, error) {
-	balance := &apimodels.OutBalance{}
-
+) (*accountmodel.Account, error) {
 	acc, err := handler.serv.GetAccountByClient(
 		handler.attr.GetSessionUser().GetID())
 	if err != nil {
@@ -74,14 +73,15 @@ func getBalanceByClient(
 			err)
 	}
 
-	balance.SetOutBalance(acc.GetPoints(), acc.GetWithdrawn())
-
-	return balance, nil
+	return acc, nil
 }
 
 func formResponeBody(
-	balance *apimodels.OutBalance,
+	acc *accountmodel.Account,
 ) (*[]byte, error) {
+	balance := &apimodels.OutBalance{}
+	balance.SetOutBalance(acc.GetPoints(), acc.GetWithdrawn())
+
 	balanceMarshall, err := json.Marshal(balance)
 	if err != nil {
 		return nil,

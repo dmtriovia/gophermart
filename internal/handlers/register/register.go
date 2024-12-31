@@ -46,23 +46,23 @@ func (h *Register) RegisterHandler(
 	writer http.ResponseWriter,
 	req *http.Request,
 ) {
-	regUser := &apimodels.InRegisterUser{}
+	reqAttr := &apimodels.InRegisterUser{}
 
-	err := getReqData(req, regUser)
+	err := getReqData(req, reqAttr)
 	if err != nil {
 		setErr(writer, h.attr, err, "getReqData")
 
 		return
 	}
 
-	isValid := validate(regUser)
+	isValid := validate(reqAttr)
 	if !isValid {
 		writer.WriteHeader(http.StatusBadRequest)
 
 		return
 	}
 
-	exist, _, err := h.authService.UserIsExist(regUser.Login)
+	exist, _, err := h.authService.UserIsExist(reqAttr.Login)
 	if err != nil {
 		setErr(writer, h.attr, err, "UserIsExist")
 
@@ -75,14 +75,14 @@ func (h *Register) RegisterHandler(
 		return
 	}
 
-	err = createUser(h, regUser)
+	err = createUser(h, reqAttr)
 	if err != nil {
 		setErr(writer, h.attr, err, "CreateUser")
 
 		return
 	}
 
-	token, err := generateToken(regUser.Login, h.attr)
+	token, err := generateToken(reqAttr.Login, h.attr)
 	if err != nil {
 		setErr(writer, h.attr, err, "generateToken")
 
@@ -94,16 +94,16 @@ func (h *Register) RegisterHandler(
 }
 
 func createUser(handler *Register,
-	regUser *apimodels.InRegisterUser,
+	reqAttr *apimodels.InRegisterUser,
 ) error {
-	passwHash, err := cryptPass(regUser.Password)
+	passwHash, err := cryptPass(reqAttr.Password)
 	if err != nil {
 		return fmt.Errorf(
 			"CreateUser->cryptPass %w", err)
 	}
 
 	user := &usermodel.User{}
-	user.SetLogin(regUser.Login)
+	user.SetLogin(reqAttr.Login)
 	user.SetPassword(passwHash)
 
 	err = handler.authService.CreateUser(user)
@@ -134,8 +134,8 @@ func setErr(writer http.ResponseWriter,
 		err, inAttr.GetLogger())
 }
 
-func validate(user *apimodels.InRegisterUser) bool {
-	if user.Login == "" || user.Password == "" {
+func validate(reqAttr *apimodels.InRegisterUser) bool {
+	if reqAttr.Login == "" || reqAttr.Password == "" {
 		return false
 	}
 
@@ -155,7 +155,7 @@ func cryptPass(pass string) (string, error) {
 
 func getReqData(
 	req *http.Request,
-	user *apimodels.InRegisterUser,
+	reqAttr *apimodels.InRegisterUser,
 ) error {
 	body, err := io.ReadAll(req.Body)
 	if err != nil {
@@ -166,7 +166,7 @@ func getReqData(
 		return fmt.Errorf("getReqData: %w", errEmptyData)
 	}
 
-	err = json.Unmarshal(body, user)
+	err = json.Unmarshal(body, reqAttr)
 	if err != nil {
 		return fmt.Errorf("getReqData->json.Unmarshal %w", err)
 	}
