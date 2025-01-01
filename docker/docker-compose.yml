@@ -1,16 +1,18 @@
+version: '3'
 services:
-  db:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
-      POSTGRES_DB: "praktikum"
+  postgres:
+    container_name: container-pg
+    image: postgres
+    hostname: localhost
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: gomarket_db
     volumes:
-      - data_sql:/var/lib/postgresql/data   # Persistent data storage
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
 
 volumes:
-  data_sql:
+  postgres-data:

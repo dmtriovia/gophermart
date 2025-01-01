@@ -48,9 +48,11 @@ type ServerAttr struct {
 	defAccSysAddr        string
 	defDatabaseURL       string
 	validAddrPattern     string
+	apiURL               string
+	migrationsDir        string
+	zapLogLevel          string
 	server               *http.Server
 	zapLogger            *zap.Logger
-	zapLogLevel          string
 	orderStorage         *orderstorage.OrderStorage
 	userStorage          *userstorage.UserStorage
 	accountStorage       *accountstorage.AccountStorage
@@ -63,8 +65,6 @@ type ServerAttr struct {
 	defReadTimeout       int
 	defWriteTimeout      int
 	defIdleTimeout       int
-	apiURL               string
-	migrationsDir        string
 	withdrawalsAttr      *withdrawalsattr.WithdrawalsAttr
 	loginAttr            *loginattr.LoginAttr
 	rigsterAttr          *registerattr.RegisterAttr
@@ -80,7 +80,9 @@ type ServerAttr struct {
 func (p *ServerAttr) Init() error {
 	p.sessionUser = &usermodel.User{}
 	p.defPORT = "localhost:8080"
-	p.defAccSysAddr, p.defDatabaseURL = "", ""
+	p.defAccSysAddr, p.defDatabaseURL = "",
+		"postgres://postgres:postgres@postgres:5432/"+
+			"gomarket_db?sslmode=disable"
 	p.validAddrPattern = "^[a-zA-Z/ ]{1,100}:[0-9]{1,10}$"
 	p.waitSecRespDB = 10
 	p.defReadTimeout, p.defWriteTimeout = 15, 15
