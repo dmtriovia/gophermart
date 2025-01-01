@@ -31,7 +31,7 @@ const defOrderData = "o.id, o.identifier, o.createddate, " +
 	"o.status, o.accrual, o.points_write_off"
 
 const defAccHistData = "ah.id,ah.points_write_off," +
-	"ah.order,ah.createddate"
+	"ah.client_order,ah.createddate"
 
 func (m *AccountStorage) MinusPointsByID(
 	ctx *context.Context,
@@ -40,7 +40,7 @@ func (m *AccountStorage) MinusPointsByID(
 ) (bool, error) {
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE account SET points=points-$1 where id=$2",
+		"UPDATE accounts SET points=points-$1 where id=$2",
 		newValuePoints,
 		accID)
 	if err != nil {
@@ -62,7 +62,7 @@ func (m *AccountStorage) PlusWithdrawnByID(
 ) (bool, error) {
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE account SET withdrawn=withdrawn+$1 where id=$2",
+		"UPDATE accounts SET withdrawn=withdrawn+$1 where id=$2",
 		newValueWithdrawn,
 		accID)
 	if err != nil {
@@ -83,7 +83,7 @@ func (m *AccountStorage) CreateAccount(
 ) error {
 	_, err := m.conn.Exec(
 		*ctx,
-		"INSERT INTO account (client,"+
+		"INSERT INTO accounts (client,"+
 			" points,withdrawn) VALUES ($1,$2,$3)",
 		account.GetClient().GetID(), account.GetPoints(),
 		account.GetWithdrawn())
@@ -101,7 +101,8 @@ func (m *AccountStorage) CreateAccountHistory(
 ) error {
 	_, err := m.conn.Exec(
 		*ctx,
-		"INSERT INTO account_history (points_write_off,order)"+
+		"INSERT INTO accounts_history"+
+			" (points_write_off,client_order)"+
 			" VALUES ($1,$2)",
 		accHist.GetpointsWriteOff(), accHist.GetOrder().GetID())
 	if err != nil {
@@ -125,8 +126,8 @@ func (m *AccountStorage) GetAccountByClient(
 
 	err := m.conn.QueryRow(
 		*ctx, "select "+defAccountData+","+defUserData+
-			" from account a"+
-			" left join user u on u.id = a.client"+
+			" from accounts a"+
+			" left join users u on u.id = a.client"+
 			" where a.client=$1"+
 			" LIMIT 1",
 		clientID).Scan(&outAccountID, &outAccountPoints,
@@ -163,8 +164,8 @@ func (m *AccountStorage) GetAccountHistoryByClient(
 
 	rows, err := m.conn.Query(
 		*ctx, "select "+defOrderData+","+defAccHistData+
-			" from account_history ah"+
-			" left join order o on o.id = ah.order"+
+			" from accounts_history ah"+
+			" left join orders o on o.id = ah.client_order"+
 			" where o.client=$1"+
 			" order by ah.createddate desc",
 		clientID)

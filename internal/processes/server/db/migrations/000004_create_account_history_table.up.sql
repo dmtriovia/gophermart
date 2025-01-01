@@ -1,11 +1,11 @@
-CREATE TABLE account_history (
+CREATE TABLE accounts_history (
    id serial primary key,
    points_write_off REAL,
-   order integer unique NOT NULL REFERENCES order(id),
+   client_order integer unique NOT NULL REFERENCES orders(id),
    createddate TIMESTAMP default now()
 );
 
 COMMIT;
 
-CREATE INDEX account_history__order__index
-ON account_history (order);
+CREATE INDEX accounts_history__client_order__index
+ON accounts_history (client_order);

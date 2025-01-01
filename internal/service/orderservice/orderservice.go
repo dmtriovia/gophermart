@@ -17,11 +17,12 @@ type OrderService struct {
 }
 
 func NewOrderService(
-	stor storage.OrderStorage, ctxDur int,
+	stor storage.OrderStorage,
+	ctxDur time.Duration,
 ) *OrderService {
 	return &OrderService{
 		repository:  stor,
-		ctxDuration: time.Duration(ctxDur),
+		ctxDuration: ctxDur,
 	}
 }
 

@@ -1,7 +1,7 @@
-CREATE TABLE order (
+CREATE TABLE orders (
    id serial primary key,
    identifier varchar not null unique,
-   client integer NOT NULL REFERENCES user(id),
+   client integer NOT NULL REFERENCES users(id),
    accrual integer,
    points_write_off REAL,
    status varchar not null,
@@ -10,5 +10,5 @@ CREATE TABLE order (
 
 COMMIT;
 
-CREATE INDEX order__client__identifier__index
-ON order (client,identifier);
+CREATE INDEX orders__client__identifier__index
+ON orders (client,identifier);

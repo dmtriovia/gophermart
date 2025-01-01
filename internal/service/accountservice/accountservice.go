@@ -19,13 +19,13 @@ type AccountService struct {
 
 func NewAccountService(
 	stor storage.AccountStorage,
-	ctxDur int,
+	ctxDur time.Duration,
 	pgxC *pgx.Conn,
 ) *AccountService {
 	return &AccountService{
 		pgxConn:     pgxC,
 		accRepo:     stor,
-		ctxDuration: time.Duration(ctxDur),
+		ctxDuration: ctxDur,
 	}
 }
 

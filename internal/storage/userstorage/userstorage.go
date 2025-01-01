@@ -29,7 +29,7 @@ func (m *UserStorage) CreateUser(
 ) error {
 	_, err := m.conn.Exec(
 		*ctx,
-		"INSERT INTO user (login, password)"+
+		"INSERT INTO users (login, password)"+
 			" VALUES ($1, $2)",
 		user.GetLogin(),
 		user.GetPassword())
@@ -56,7 +56,7 @@ func (m *UserStorage) GetUser(
 	err := m.conn.QueryRow(
 		*ctx,
 		"select "+defUserData+
-			" from user u"+
+			" from users u"+
 			" where login=$1 LIMIT 1",
 		login).Scan(&outID, &outLogin, &outPass,
 		&outCreateddate)

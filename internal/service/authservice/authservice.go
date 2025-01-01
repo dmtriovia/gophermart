@@ -17,11 +17,12 @@ type AuthService struct {
 }
 
 func NewAuthService(
-	stor storage.UserStorage, ctxDur int,
+	stor storage.UserStorage,
+	ctxDur time.Duration,
 ) *AuthService {
 	return &AuthService{
 		repository:  stor,
-		ctxDuration: time.Duration(ctxDur),
+		ctxDuration: ctxDur,
 	}
 }
 

@@ -1,1 +1,1 @@
-DROP TABLE account_history;
+DROP TABLE accounts_history;

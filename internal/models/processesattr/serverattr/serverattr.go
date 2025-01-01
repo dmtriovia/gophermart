@@ -40,6 +40,14 @@ import (
 	"go.uber.org/zap"
 )
 
+const initwaitSecRespDB = 10
+
+const initReadTimeout = 15
+
+const initWriteTimeout = 15
+
+const initIdleTimeout = 60
+
 type ServerAttr struct {
 	runAddress           string
 	databaseURL          string
@@ -58,13 +66,13 @@ type ServerAttr struct {
 	accountStorage       *accountstorage.AccountStorage
 	accountService       *accountservice.AccountService
 	authService          *authservice.AuthService
-	orderSerice          *orderservice.OrderService
+	orderService         *orderservice.OrderService
 	calculateService     *calculateservice.CalculateService
 	pgxConn              *pgx.Conn
-	waitSecRespDB        int
-	defReadTimeout       int
-	defWriteTimeout      int
-	defIdleTimeout       int
+	waitSecRespDB        time.Duration
+	defReadTimeout       time.Duration
+	defWriteTimeout      time.Duration
+	defIdleTimeout       time.Duration
 	withdrawalsAttr      *withdrawalsattr.WithdrawalsAttr
 	loginAttr            *loginattr.LoginAttr
 	rigsterAttr          *registerattr.RegisterAttr
@@ -77,16 +85,34 @@ type ServerAttr struct {
 	sessionUser          *usermodel.User
 }
 
-func (p *ServerAttr) Init() error {
-	p.sessionUser = &usermodel.User{}
+func (p *ServerAttr) PreInit() error {
+	p.zapLogLevel = "info"
+	p.waitSecRespDB = initwaitSecRespDB * time.Second
+	p.validAddrPattern = "^[a-zA-Z/ ]{1,100}:[0-9]{1,10}$"
 	p.defPORT = "localhost:8080"
 	p.defAccSysAddr, p.defDatabaseURL = "",
-		"postgres://postgres:postgres@postgres:5432/"+
-			"praktikum?sslmode=disable"
-	p.validAddrPattern = "^[a-zA-Z/ ]{1,100}:[0-9]{1,10}$"
-	p.waitSecRespDB = 10
-	p.defReadTimeout, p.defWriteTimeout = 15, 15
-	p.defIdleTimeout = 60
+		"postgres://postgres:postgres@localhost:5432"+
+			"/praktikum?sslmode=disable"
+
+	logger, err := logger.Initialize(p.zapLogLevel)
+	if err != nil {
+		return fmt.Errorf(
+			"PreInit->logger.Initialize %w",
+			err)
+	}
+
+	p.zapLogger = logger
+
+	return nil
+}
+
+func (p *ServerAttr) Init() error {
+	p.sessionUser = &usermodel.User{}
+
+	p.defReadTimeout,
+		p.defWriteTimeout = initReadTimeout*time.Second,
+		initWriteTimeout*time.Second
+	p.defIdleTimeout = initIdleTimeout * time.Second
 	p.apiURL = "/api/user/"
 	p.migrationsDir = "db/migrations"
 	p.accountStorage = &accountstorage.AccountStorage{}
@@ -99,31 +125,26 @@ func (p *ServerAttr) Init() error {
 		p.accountStorage, p.waitSecRespDB, p.pgxConn)
 	p.authService = authservice.NewAuthService(
 		p.userStorage, p.waitSecRespDB)
-	p.orderSerice = orderservice.NewOrderService(
+	p.orderService = orderservice.NewOrderService(
 		p.orderStorage, p.waitSecRespDB)
-	p.zapLogLevel = "info"
+	p.calculateService = calculateservice.NewCalculateService(
+		p.accountStorage, p.waitSecRespDB, p.pgxConn)
 
-	logger, err := logger.Initialize(p.zapLogLevel)
-	if err != nil {
-		return fmt.Errorf(
-			"ServerAttr->Init->logger.Initialize %w",
-			err)
-	}
-
-	p.zapLogger = logger
 	initHandlersAttr(p)
-	p.withdrawalsAttr = &withdrawalsattr.WithdrawalsAttr{}
-	p.authMidAttr.Init(logger, p.authService, p.sessionUser)
+	p.authMidAttr = &authmiddlewareattr.AuthMiddlewareAttr{}
+	p.authMidAttr.Init(p.zapLogger,
+		p.authService, p.sessionUser)
 
 	mux := mux.NewRouter()
 	initAPIMethods(mux, p)
+
 	p.server = &http.Server{
 		Addr:         p.runAddress,
 		Handler:      mux,
 		ErrorLog:     nil,
-		ReadTimeout:  time.Duration(p.defReadTimeout),
-		WriteTimeout: time.Duration(p.defWriteTimeout),
-		IdleTimeout:  time.Duration(p.defIdleTimeout),
+		ReadTimeout:  p.defReadTimeout,
+		WriteTimeout: p.defWriteTimeout,
+		IdleTimeout:  p.defIdleTimeout,
 	}
 
 	return nil
@@ -137,7 +158,7 @@ func initHandlersAttr(attr *ServerAttr) {
 	attr.getOrderAttr = &getorderattr.GetOrderAttr{}
 	attr.balanceAttr = &balanceattr.BalanceAttr{}
 	attr.withdrawAttr = &withdrawattr.WithdrawAttr{}
-	attr.authMidAttr = &authmiddlewareattr.AuthMiddlewareAttr{}
+	attr.withdrawalsAttr = &withdrawalsattr.WithdrawalsAttr{}
 
 	attr.loginAttr.Init(attr.zapLogger)
 	attr.rigsterAttr.Init(attr.zapLogger)
@@ -158,8 +179,8 @@ func initAPIMethods(
 	post := http.MethodPost
 
 	getOrders := getorders.NewGetOrdersHandler(
-		attr.orderSerice, attr.getOrdersAttr).GetOrderHandler
-	getOrder := getorder.NewGetOrderHandler(attr.orderSerice,
+		attr.orderService, attr.getOrdersAttr).GetOrderHandler
+	getOrder := getorder.NewGetOrderHandler(attr.orderService,
 		attr.getOrderAttr).GetOrderHandler
 	balance := balance.NewBalanceHandler(
 		attr.accountService, attr.balanceAttr).BalanceHandler
@@ -173,9 +194,9 @@ func initAPIMethods(
 	login := login.NewLoginHandler(
 		attr.authService, attr.loginAttr).LoginHandler
 	setOrder := setorder.NewSetOrderHandler(
-		attr.orderSerice, attr.setOrderAttr).SetOrderHandler
+		attr.orderService, attr.setOrderAttr).SetOrderHandler
 	withdraw := withdraw.NewWithdrawHandler(
-		attr.accountService, attr.orderSerice,
+		attr.accountService, attr.orderService,
 		attr.calculateService, attr.withdrawAttr).WithdrawHandler
 
 	setMethod(get, "orders", mux, attr, getOrders, true)
@@ -251,7 +272,7 @@ func (p *ServerAttr) GetDatabaseURL() *string {
 	return &p.databaseURL
 }
 
-func (p *ServerAttr) GetWaitSecRespDB() int {
+func (p *ServerAttr) GetWaitSecRespDB() time.Duration {
 	return p.waitSecRespDB
 }
 

@@ -33,7 +33,7 @@ func (m *OrderStorage) CreateOrder(
 ) error {
 	_, err := m.conn.Exec(
 		*ctx,
-		"INSERT INTO order (identifier,client,"+
+		"INSERT INTO orders (identifier,client,"+
 			" accrual,status) VALUES ($1,$2,$3,$4)",
 		order.GetIdentifier(), order.GetClient().GetID(),
 		order.GetAccrual(), order.GetStatus())
@@ -54,7 +54,7 @@ func (m *OrderStorage) PlusPointsWriteOffByID(
 
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE order SET "+t+"="+t+"+$1 where id=$2",
+		"UPDATE orders SET "+t+"="+t+"+$1 where id=$2",
 		newValuePointsWriteOff,
 		orderID)
 	if err != nil {
@@ -86,8 +86,8 @@ func (m *OrderStorage) GetOrder(
 
 	err := m.conn.QueryRow(
 		*ctx, "select "+defOrderData+","+defUserData+
-			" from order o"+
-			" left join user u on u.id = order.client"+
+			" from orders o"+
+			" left join users u on u.id = order.client"+
 			" where o.identifier=$1 LIMIT 1",
 		ident).Scan(&outOrderID,
 		&outOrderIdentifier,
@@ -140,8 +140,8 @@ func (m *OrderStorage) GetOrdersByClient(
 
 	rows, err := m.conn.Query(
 		*ctx, "select "+defOrderData+","+defUserData+
-			" from order o"+
-			" left join user u on u.id = o.client"+
+			" from orders o"+
+			" left join users u on u.id = o.client"+
 			" where o.client=$1"+
 			" order by o.createddate desc",
 		clientID)

@@ -8,7 +8,9 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"time"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	"github.com/dmitrovia/gophermart/internal/functions/validatef"
 	"github.com/dmitrovia/gophermart/internal/logger"
@@ -21,35 +23,19 @@ var errParseFlags = errors.New("addr is not valid")
 //go:embed db/migrations/*.sql
 var MigrationsFS embed.FS
 
-func RunProcess() {
+func RunProcess(waitG *sync.WaitGroup) {
 	attr := &serverattr.ServerAttr{}
 
-	err := attr.Init()
+	err := attr.PreInit()
 	if err != nil {
-		fmt.Println("RP->attr.Init: %w", err)
+		fmt.Println("RP->attr.preInit: %w", err)
 	}
 
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
-		time.Duration(attr.GetWaitSecRespDB()))
+		attr.GetWaitSecRespDB())
 
 	defer cancel()
-
-	err = UseMigrations(attr)
-	if err != nil {
-		logger.DoInfoLogFromErr(
-			"RP->UseMigrations", err, attr.GetLogger())
-
-		return
-	}
-
-	err = attr.SetPgxConn(ctx)
-	if err != nil {
-		logger.DoInfoLogFromErr(
-			"RP->SetPgxConn", err, attr.GetLogger())
-
-		return
-	}
 
 	initiateFlags(attr)
 
@@ -61,12 +47,61 @@ func RunProcess() {
 		return
 	}
 
+	err = attr.Init()
+	if err != nil {
+		fmt.Println("RP->attr.Init: %w", err)
+	}
+
+	err = attr.SetPgxConn(ctx)
+	if err != nil {
+		logger.DoInfoLogFromErr(
+			"RP->SetPgxConn", err, attr.GetLogger())
+
+		return
+	}
+
+	err = UseMigrations(attr)
+	if err != nil {
+		logger.DoInfoLogFromErr(
+			"RP->UseMigrations", err, attr.GetLogger())
+
+		return
+	}
+
+	go waitClose(ctx, attr, waitG)
+
 	err = runServer(attr)
 	if err != nil {
 		logger.DoInfoLogFromErr(
 			"RP->runServer", err, attr.GetLogger())
 
 		return
+	}
+}
+
+func waitClose(
+	ctx context.Context,
+	attr *serverattr.ServerAttr,
+	waitG *sync.WaitGroup,
+) {
+	channelCancel := make(chan os.Signal, 1)
+	signal.Notify(channelCancel,
+		os.Interrupt,
+		syscall.SIGTERM,
+		syscall.SIGINT)
+
+	for {
+		_, ok := <-channelCancel
+		if ok {
+			err := attr.GetServer().Shutdown(ctx)
+			if err != nil {
+				fmt.Println("RP->Shutdown: %w", err)
+			}
+
+			waitG.Done()
+
+			return
+		}
 	}
 }
 

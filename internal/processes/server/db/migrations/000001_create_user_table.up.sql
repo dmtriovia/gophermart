@@ -1,4 +1,4 @@
-CREATE TABLE user (
+CREATE TABLE users (
    id serial primary key,
    login varchar not null unique,
    password varchar not null,
@@ -7,5 +7,5 @@ CREATE TABLE user (
 
 COMMIT;
 
-CREATE INDEX order__login__index
-ON user (login);
+CREATE INDEX users__login__index
+ON users (login);
