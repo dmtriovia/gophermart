@@ -82,7 +82,7 @@ func (p *ServerAttr) Init() error {
 	p.defPORT = "localhost:8080"
 	p.defAccSysAddr, p.defDatabaseURL = "",
 		"postgres://postgres:postgres@postgres:5432/"+
-			"gomarket_db?sslmode=disable"
+			"praktikum?sslmode=disable"
 	p.validAddrPattern = "^[a-zA-Z/ ]{1,100}:[0-9]{1,10}$"
 	p.waitSecRespDB = 10
 	p.defReadTimeout, p.defWriteTimeout = 15, 15
