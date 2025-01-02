@@ -40,6 +40,8 @@ func (h *GetOrders) GetOrderHandler(
 
 	if len(*orders) == 0 {
 		writer.WriteHeader(http.StatusNoContent)
+
+		return
 	}
 
 	marshal, err := formResponeBody(orders)
@@ -78,9 +80,11 @@ func getOrdersByClient(
 	}
 
 	if len(*scanErrors) != 0 {
-		logger.DoInfoLogFromErr(
-			"GetOrdersByClient->GetOrdersByClient",
-			err, handler.attr.GetLogger())
+		for _, err := range *scanErrors {
+			logger.DoInfoLogFromErr(
+				"GetOrdersByClient->GetOrdersByClient",
+				err, handler.attr.GetLogger())
+		}
 	}
 
 	return orders, nil

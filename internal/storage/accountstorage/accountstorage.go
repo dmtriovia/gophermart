@@ -81,7 +81,7 @@ func (m *AccountStorage) CreateAccount(
 	ctx *context.Context,
 	account *accountmodel.Account,
 ) error {
-	var lastInsertID int32
+	var lastInsertID *int32
 
 	err := m.conn.QueryRow(
 		*ctx,
@@ -94,7 +94,7 @@ func (m *AccountStorage) CreateAccount(
 			"CreateAccount->Scan: %w", err)
 	}
 
-	account.SetID(lastInsertID)
+	account.SetID(*lastInsertID)
 
 	return nil
 }
@@ -103,7 +103,7 @@ func (m *AccountStorage) CreateAccountHistory(
 	ctx *context.Context,
 	accHist *accounthistorymodel.AccountHistory,
 ) error {
-	var lastInsertID int32
+	var lastInsertID *int32
 
 	err := m.conn.QueryRow(
 		*ctx,
@@ -117,7 +117,7 @@ func (m *AccountStorage) CreateAccountHistory(
 			"CreateAccountHistory->Scan: %w", err)
 	}
 
-	accHist.SetID(lastInsertID)
+	accHist.SetID(*lastInsertID)
 
 	return nil
 }
@@ -127,10 +127,10 @@ func (m *AccountStorage) GetAccountByClient(
 	clientID int32,
 ) (*accountmodel.Account, error) {
 	var (
-		outAccountID, outAccountClientID, outUserID int32
-		outAccountCreateddate, outUserCreateddate   time.Time
-		outUserLogin, outUserPass                   string
-		outAccountPoints, outAccountWithdrawn       float32
+		outAccountID, outAccountClientID, outUserID *int32
+		outAccountCreateddate, outUserCreateddate   *time.Time
+		outUserLogin, outUserPass                   *string
+		outAccountPoints, outAccountWithdrawn       *float32
 	)
 
 	err := m.conn.QueryRow(
@@ -151,10 +151,10 @@ func (m *AccountStorage) GetAccountByClient(
 	acc := &accountmodel.Account{}
 	user := &usermodel.User{}
 
-	user.SetUser(outUserID, outUserPass,
+	user.SetUser(*outUserID, outUserPass,
 		outUserLogin, outUserCreateddate)
 	acc.SetAccount(
-		outAccountID, user, outAccountCreateddate,
+		*outAccountID, user, outAccountCreateddate,
 		outAccountPoints, outAccountWithdrawn)
 
 	return acc, nil
@@ -165,10 +165,10 @@ func (m *AccountStorage) GetAccountHistoryByClient(
 	clientID int32,
 ) (*[]accounthistorymodel.AccountHistory, *[]error, error) {
 	var (
-		OrdCreateddate, AccHistCreateddate          time.Time
-		OrdID, AcctHistID, AccHistOrdID, OrdAccrual int32
-		OrdStatus, OrdIdentifier                    string
-		OrdPointsWriteOff, AccHistPointsWriteOff    float32
+		OrdCreateddate, AccHistCreateddate          *time.Time
+		OrdID, AcctHistID, AccHistOrdID, OrdAccrual *int32
+		OrdStatus, OrdIdentifier                    *string
+		OrdPointsWriteOff, AccHistPointsWriteOff    *float32
 	)
 
 	rows, err := m.conn.Query(
@@ -185,18 +185,9 @@ func (m *AccountStorage) GetAccountHistoryByClient(
 
 	defer rows.Close()
 
-	cnt := 0
-	for rows.Next() {
-		cnt++
-	}
-
 	accHists := make(
-		[]accounthistorymodel.AccountHistory, 0, cnt)
-	errors := make([]error, 0, cnt)
-
-	if cnt == 0 {
-		return &accHists, &errors, nil
-	}
+		[]accounthistorymodel.AccountHistory, 0)
+	errors := make([]error, 0)
 
 	for rows.Next() {
 		accHist := &accounthistorymodel.AccountHistory{}
@@ -210,10 +201,10 @@ func (m *AccountStorage) GetAccountHistoryByClient(
 		if err != nil {
 			errors = append(errors, err)
 		} else {
-			order.SetOrder(OrdID, OrdIdentifier, nil,
+			order.SetOrder(*OrdID, OrdIdentifier, nil,
 				OrdCreateddate, OrdStatus,
 				OrdAccrual, OrdPointsWriteOff)
-			accHist.SetAccountHistory(AcctHistID, order,
+			accHist.SetAccountHistory(*AcctHistID, order,
 				AccHistCreateddate, AccHistPointsWriteOff)
 
 			accHists = append(accHists, *accHist)

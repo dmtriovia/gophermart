@@ -16,22 +16,22 @@ const OrderStatusProcessed string = "PROCESSED"
 
 type Order struct {
 	id             int32
-	identifier     string
+	identifier     *string
 	client         *usermodel.User
-	createddate    time.Time
-	status         string
-	accrual        int32
-	pointsWriteOff float32
+	createddate    *time.Time
+	status         *string
+	accrual        *int32
+	pointsWriteOff *float32
 }
 
 func (o *Order) SetOrder(
 	idDB int32,
-	identifier string,
+	identifier *string,
 	client *usermodel.User,
-	createddate time.Time,
-	status string,
-	accrual int32,
-	pointsWriteOff float32,
+	createddate *time.Time,
+	status *string,
+	accrual *int32,
+	pointsWriteOff *float32,
 ) {
 	o.id = idDB
 	o.identifier = identifier
@@ -42,15 +42,15 @@ func (o *Order) SetOrder(
 	o.pointsWriteOff = pointsWriteOff
 }
 
-func (o *Order) GetpointsWriteOff() float32 {
+func (o *Order) GetpointsWriteOff() *float32 {
 	return o.pointsWriteOff
 }
 
-func (o *Order) SetpointsWriteOff(points float32) {
+func (o *Order) SetpointsWriteOff(points *float32) {
 	o.pointsWriteOff = points
 }
 
-func (o *Order) SetStatus(status string) {
+func (o *Order) SetStatus(status *string) {
 	o.status = status
 }
 
@@ -58,7 +58,7 @@ func (o *Order) SetClient(user *usermodel.User) {
 	o.client = user
 }
 
-func (o *Order) SetIdentifier(ident string) {
+func (o *Order) SetIdentifier(ident *string) {
 	o.identifier = ident
 }
 
@@ -70,15 +70,15 @@ func (o *Order) SetID(id int32) {
 	o.id = id
 }
 
-func (o *Order) GetAccrual() int32 {
+func (o *Order) GetAccrual() *int32 {
 	return o.accrual
 }
 
-func (o *Order) GetStatus() string {
+func (o *Order) GetStatus() *string {
 	return o.status
 }
 
-func (o *Order) GetIdentifier() string {
+func (o *Order) GetIdentifier() *string {
 	return o.identifier
 }
 
@@ -86,6 +86,6 @@ func (o *Order) GetClient() *usermodel.User {
 	return o.client
 }
 
-func (o *Order) GetCreateddate() time.Time {
+func (o *Order) GetCreateddate() *time.Time {
 	return o.createddate
 }

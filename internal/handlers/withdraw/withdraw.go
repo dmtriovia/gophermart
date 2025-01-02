@@ -148,7 +148,7 @@ func getAccountByClient(
 func checkEnoughFunds(acc *accountmodel.Account,
 	reqAttr *apimodels.InWithdraw,
 ) bool {
-	clientPoints := acc.GetPoints()
+	clientPoints := *acc.GetPoints()
 	withdrawPoints := reqAttr.PointsWriteOff
 
 	return clientPoints >= withdrawPoints

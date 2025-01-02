@@ -39,10 +39,13 @@ func (s *OrderService) GetOrdersByClient(
 	orders, errors, err := s.repository.GetOrdersByClient(
 		&ctx,
 		clientID)
+	if err != nil {
+		return orders, errors, fmt.Errorf(
+			"GetOrdersByClient->GetOrdersByClient: %w",
+			err)
+	}
 
-	return orders, errors, fmt.Errorf(
-		"GetOrdersByClient->GetOrdersByClient: %w",
-		err)
+	return orders, errors, nil
 }
 
 func (s *OrderService) OrderIsExist(ident string) (
@@ -58,6 +61,7 @@ func (s *OrderService) OrderIsExist(ident string) (
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil, nil
 		}
+
 		return false, nil, fmt.Errorf(
 			"OrderIsExist->GetOrder: %w",
 			err)

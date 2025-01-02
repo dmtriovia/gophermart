@@ -95,8 +95,11 @@ func (s *AccountService) GetAccountHistoryByClient(
 		err := s.accRepo.GetAccountHistoryByClient(
 		&ctx,
 		clientID)
+	if err != nil {
+		return accHists, errors, fmt.Errorf(
+			"GetAccountHistoryByClient->GetAccHistByClient: %w",
+			err)
+	}
 
-	return accHists, errors, fmt.Errorf(
-		"GetAccountHistoryByClient->GetAccHistByClient: %w",
-		err)
+	return accHists, errors, nil
 }

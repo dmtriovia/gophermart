@@ -27,7 +27,7 @@ func (m *UserStorage) CreateUser(
 	ctx *context.Context,
 	user *usermodel.User,
 ) error {
-	var lastInsertID int32
+	var lastInsertID *int32
 
 	err := m.conn.QueryRow(
 		*ctx,
@@ -40,7 +40,7 @@ func (m *UserStorage) CreateUser(
 			"CreateUser->Scan: %w", err)
 	}
 
-	user.SetID(lastInsertID)
+	user.SetID(*lastInsertID)
 
 	return nil
 }
@@ -52,9 +52,9 @@ func (m *UserStorage) GetUser(
 	user := &usermodel.User{}
 
 	var (
-		outID             int32
-		outLogin, outPass string
-		outCreateddate    time.Time
+		outID             *int32
+		outLogin, outPass *string
+		outCreateddate    *time.Time
 	)
 
 	err := m.conn.QueryRow(
@@ -74,7 +74,7 @@ func (m *UserStorage) GetUser(
 				err)
 	}
 
-	user.SetUser(outID,
+	user.SetUser(*outID,
 		outLogin,
 		outPass,
 		outCreateddate,

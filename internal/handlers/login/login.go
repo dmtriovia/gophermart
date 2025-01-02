@@ -67,7 +67,7 @@ func (h *Login) LoginHandler(
 		return
 	}
 
-	err = checkPass(user.GetPassword(), reqAttr.Password)
+	err = checkPass(*user.GetPassword(), reqAttr.Password)
 	if err != nil {
 		writer.WriteHeader(http.StatusUnauthorized)
 		logger.DoInfoLogFromErr("login->checkPass",

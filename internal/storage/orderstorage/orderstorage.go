@@ -31,7 +31,7 @@ func (m *OrderStorage) CreateOrder(
 	ctx *context.Context,
 	order *ordermodel.Order,
 ) error {
-	var lastInsertID int32
+	var lastInsertID *int32
 
 	err := m.conn.QueryRow(
 		*ctx,
@@ -44,7 +44,7 @@ func (m *OrderStorage) CreateOrder(
 			"CreateOrder->Scan: %w", err)
 	}
 
-	order.SetID(lastInsertID)
+	order.SetID(*lastInsertID)
 
 	return nil
 }
@@ -81,11 +81,11 @@ func (m *OrderStorage) GetOrder(
 	user := &usermodel.User{}
 
 	var (
-		outOrderID, outOrderAccrual, outUserID  int32
-		outOrderStatus, outOrderIdentifier      string
-		outOrderCreateddate, outUserCreateddate time.Time
-		outOrderPointsWriteOff                  float32
-		outUserLogin, outUserPass               string
+		outOrderID, outOrderAccrual, outUserID  *int32
+		outOrderStatus, outOrderIdentifier      *string
+		outOrderCreateddate, outUserCreateddate *time.Time
+		outOrderPointsWriteOff                  *float32
+		outUserLogin, outUserPass               *string
 	)
 
 	err := m.conn.QueryRow(
@@ -113,13 +113,13 @@ func (m *OrderStorage) GetOrder(
 				err)
 	}
 
-	user.SetUser(outUserID,
+	user.SetUser(*outUserID,
 		outUserPass,
 		outUserLogin,
 		outUserCreateddate)
 
 	order.SetOrder(
-		outOrderID,
+		*outOrderID,
 		outOrderIdentifier,
 		user,
 		outOrderCreateddate,
@@ -134,11 +134,11 @@ func (m *OrderStorage) GetOrdersByClient(
 	clientID int32,
 ) (*[]ordermodel.Order, *[]error, error) {
 	var (
-		outOrderID, outUserID, outOrderAccrual  int32
-		outOrderStatus, outOrderIdentifier      string
-		outUserLogin, outUserPass               string
-		outUserCreateddate, outOrderCreateddate time.Time
-		outOrderPointsWriteOff                  float32
+		outOrderID, outUserID, outOrderAccrual  *int32
+		outOrderStatus, outOrderIdentifier      *string
+		outUserLogin, outUserPass               *string
+		outUserCreateddate, outOrderCreateddate *time.Time
+		outOrderPointsWriteOff                  *float32
 	)
 
 	rows, err := m.conn.Query(
@@ -155,33 +155,24 @@ func (m *OrderStorage) GetOrdersByClient(
 
 	defer rows.Close()
 
-	cnt := 0
-	for rows.Next() {
-		cnt++
-	}
-
-	orders := make([]ordermodel.Order, 0, cnt)
-	errors := make([]error, 0, cnt)
-
-	if cnt == 0 {
-		return &orders, &errors, nil
-	}
+	orders := make([]ordermodel.Order, 0)
+	errors := make([]error, 0)
 
 	for rows.Next() {
 		order := &ordermodel.Order{}
 		user := &usermodel.User{}
 		err = rows.Scan(&outOrderID, &outOrderIdentifier,
-			&outOrderCreateddate, &outOrderAccrual,
-			&outOrderPointsWriteOff, &outOrderStatus, &outUserID,
+			&outOrderCreateddate, &outOrderStatus, &outOrderAccrual,
+			&outOrderPointsWriteOff, &outUserID,
 			&outUserLogin, &outUserPass, &outUserCreateddate)
 
 		if err != nil {
 			errors = append(errors, err)
 		} else {
-			user.SetUser(outUserID, outUserPass,
+			user.SetUser(*outUserID, outUserPass,
 				outUserLogin, outUserCreateddate)
 			order.SetOrder(
-				outOrderID, outOrderIdentifier, user,
+				*outOrderID, outOrderIdentifier, user,
 				outOrderCreateddate, outOrderStatus,
 				outOrderAccrual, outOrderPointsWriteOff)
 

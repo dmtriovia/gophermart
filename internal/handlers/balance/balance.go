@@ -80,7 +80,8 @@ func formResponeBody(
 	acc *accountmodel.Account,
 ) (*[]byte, error) {
 	balance := &apimodels.OutBalance{}
-	balance.SetOutBalance(acc.GetPoints(), acc.GetWithdrawn())
+	balance.SetOutBalance(acc.GetPoints(),
+		acc.GetWithdrawn())
 
 	balanceMarshall, err := json.Marshal(balance)
 	if err != nil {

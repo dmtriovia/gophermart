@@ -21,18 +21,22 @@ type InWithdraw struct {
 	OrderIdentifier string  `json:"order"`
 }
 
+type InGetOrder struct {
+	Identifier string
+}
+
 type OutGetOrders struct {
-	Identifier  string    `json:"number"`
-	Createddate time.Time `json:"uploaded_at"`
-	Status      string    `json:"status"`
-	Accrual     int32     `json:"accrual,omitempty"`
+	Identifier  *string    `json:"number"`
+	Createddate *time.Time `json:"uploaded_at"`
+	Status      *string    `json:"status"`
+	Accrual     *int32     `json:"accrual,omitempty"`
 }
 
 func (o *OutGetOrders) SetOutGetOrders(
-	identifier string,
-	createddate time.Time,
-	status string,
-	accrual int32,
+	identifier *string,
+	createddate *time.Time,
+	status *string,
+	accrual *int32,
 ) {
 	o.Identifier = identifier
 	o.Createddate = createddate
@@ -41,48 +45,44 @@ func (o *OutGetOrders) SetOutGetOrders(
 }
 
 type OutBalance struct {
-	Points    float32 `json:"current"`
-	Withdrawn float32 `json:"withdrawn"`
+	Points    *float32 `json:"current"`
+	Withdrawn *float32 `json:"withdrawn"`
 }
 
 func (o *OutBalance) SetOutBalance(
-	points float32,
-	withdrawn float32,
+	points *float32,
+	withdrawn *float32,
 ) {
 	o.Points = points
 	o.Withdrawn = withdrawn
 }
 
 type OutWithdrawals struct {
-	PointsWriteOff  float32   `json:"sum"`
-	OrderIdentifier string    `json:"order"`
-	Createddate     time.Time `json:"processed_at"`
+	PointsWriteOff  *float32   `json:"sum"`
+	OrderIdentifier *string    `json:"order"`
+	Createddate     *time.Time `json:"processed_at"`
 }
 
 func (o *OutWithdrawals) SetOutWithdrawals(
-	pointsWriteOff float32,
-	orderIdentifier string,
-	createddate time.Time,
+	pointsWriteOff *float32,
+	orderIdentifier *string,
+	createddate *time.Time,
 ) {
 	o.PointsWriteOff = pointsWriteOff
 	o.OrderIdentifier = orderIdentifier
 	o.Createddate = createddate
 }
 
-type InGetOrder struct {
-	Identifier string
-}
-
 type OutGetOrder struct {
-	Identifier string `json:"number"`
-	Status     string `json:"status"`
-	Accrual    int32  `json:"accrual,omitempty"`
+	Identifier *string `json:"number"`
+	Status     *string `json:"status"`
+	Accrual    *int32  `json:"accrual,omitempty"`
 }
 
 func (o *OutGetOrder) SetOutGetOrder(
-	identifier string,
-	status string,
-	accrual int32,
+	identifier *string,
+	status *string,
+	accrual *int32,
 ) {
 	o.Identifier = identifier
 	o.Status = status

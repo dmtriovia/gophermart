@@ -8,18 +8,18 @@ import (
 
 type Account struct {
 	id          int32
-	createddate time.Time
+	createddate *time.Time
 	client      *usermodel.User
-	points      float32
-	withdrawn   float32
+	points      *float32
+	withdrawn   *float32
 }
 
 func (u *Account) SetAccount(
 	idDB int32,
 	client *usermodel.User,
-	createddate time.Time,
-	points float32,
-	withdrawn float32,
+	createddate *time.Time,
+	points *float32,
+	withdrawn *float32,
 ) {
 	u.id = idDB
 	u.createddate = createddate
@@ -40,23 +40,23 @@ func (u *Account) SetID(id int32) {
 	u.id = id
 }
 
-func (u *Account) GetCreateddate() time.Time {
+func (u *Account) GetCreateddate() *time.Time {
 	return u.createddate
 }
 
-func (u *Account) GetWithdrawn() float32 {
+func (u *Account) GetWithdrawn() *float32 {
 	return u.withdrawn
 }
 
-func (u *Account) GetPoints() float32 {
+func (u *Account) GetPoints() *float32 {
 	return u.points
 }
 
-func (u *Account) SetPoints(points float32) {
+func (u *Account) SetPoints(points *float32) {
 	u.points = points
 }
 
-func (u *Account) SetWithdrawn(withdrawn float32) {
+func (u *Account) SetWithdrawn(withdrawn *float32) {
 	u.withdrawn = withdrawn
 }
 

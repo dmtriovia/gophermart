@@ -103,8 +103,8 @@ func createUser(handler *Register,
 	}
 
 	user := &usermodel.User{}
-	user.SetLogin(reqAttr.Login)
-	user.SetPassword(passwHash)
+	user.SetLogin(&reqAttr.Login)
+	user.SetPassword(&passwHash)
 
 	err = handler.authService.CreateUser(user)
 	if err != nil {

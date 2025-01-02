@@ -43,6 +43,8 @@ func (h *Withdrawals) WithdrawalsHandler(
 
 	if len(*accHists) == 0 {
 		writer.WriteHeader(http.StatusNoContent)
+
+		return
 	}
 
 	marshal, err := formResponeBody(accHists)
@@ -83,9 +85,11 @@ func GetAccountHistoryByClient(
 	}
 
 	if len(*scanErrors) != 0 {
-		logger.DoInfoLogFromErr(
-			"getAccHistoryByClient->GetAccountHistoryByClient",
-			err, handler.attr.GetLogger())
+		for _, err := range *scanErrors {
+			logger.DoInfoLogFromErr(
+				"getAccHistoryByClient->GetAccountHistoryByClient",
+				err, handler.attr.GetLogger())
+		}
 	}
 
 	return accHists, nil

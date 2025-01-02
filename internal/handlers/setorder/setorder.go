@@ -92,9 +92,11 @@ func createOrder(reqAttr *apimodels.InSetOrder,
 ) error {
 	order := &ordermodel.Order{}
 
-	order.SetIdentifier(reqAttr.Identifier)
+	order.SetIdentifier(&reqAttr.Identifier)
 	order.SetClient(hand.attr.GetSessionUser())
-	order.SetStatus(ordermodel.OrderStatusRegistered)
+
+	status := ordermodel.OrderStatusRegistered
+	order.SetStatus(&status)
 
 	err := hand.serv.CreateOrder(order)
 	if err != nil {

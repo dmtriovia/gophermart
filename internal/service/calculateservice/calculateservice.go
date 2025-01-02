@@ -93,7 +93,7 @@ func CreateAccountHistory(
 ) error {
 	accHist := accounthistorymodel.AccountHistory{}
 	accHist.SetOrder(order)
-	accHist.SetpointsWriteOff(points)
+	accHist.SetpointsWriteOff(&points)
 
 	err := service.accRepo.CreateAccountHistory(ctx, &accHist)
 	if err != nil {

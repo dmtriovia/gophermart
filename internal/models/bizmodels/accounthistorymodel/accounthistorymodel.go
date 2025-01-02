@@ -9,15 +9,15 @@ import (
 type AccountHistory struct {
 	id             int32
 	order          *ordermodel.Order
-	pointsWriteOff float32
-	createddate    time.Time
+	pointsWriteOff *float32
+	createddate    *time.Time
 }
 
 func (u *AccountHistory) SetAccountHistory(
 	idDB int32,
 	order *ordermodel.Order,
-	createddate time.Time,
-	pointsWriteOff float32,
+	createddate *time.Time,
+	pointsWriteOff *float32,
 ) {
 	u.id = idDB
 	u.createddate = createddate
@@ -33,11 +33,11 @@ func (u *AccountHistory) SetID(id int32) {
 	u.id = id
 }
 
-func (u *AccountHistory) GetCreateddate() time.Time {
+func (u *AccountHistory) GetCreateddate() *time.Time {
 	return u.createddate
 }
 
-func (u *AccountHistory) GetpointsWriteOff() float32 {
+func (u *AccountHistory) GetpointsWriteOff() *float32 {
 	return u.pointsWriteOff
 }
 
@@ -45,7 +45,9 @@ func (u *AccountHistory) GetOrder() *ordermodel.Order {
 	return u.order
 }
 
-func (u *AccountHistory) SetpointsWriteOff(points float32) {
+func (u *AccountHistory) SetpointsWriteOff(
+	points *float32,
+) {
 	u.pointsWriteOff = points
 }
 

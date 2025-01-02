@@ -4,16 +4,16 @@ import "time"
 
 type User struct {
 	id          int32
-	login       string
-	password    string
-	createddate time.Time
+	login       *string
+	password    *string
+	createddate *time.Time
 }
 
 func (u *User) SetUser(
 	idDB int32,
-	login string,
-	password string,
-	createddate time.Time,
+	login *string,
+	password *string,
+	createddate *time.Time,
 ) {
 	u.id = idDB
 	u.login = login
@@ -22,13 +22,13 @@ func (u *User) SetUser(
 }
 
 func (u *User) SetLogin(
-	login string,
+	login *string,
 ) {
 	u.login = login
 }
 
 func (u *User) SetPassword(
-	password string,
+	password *string,
 ) {
 	u.password = password
 }
@@ -41,14 +41,14 @@ func (u *User) SetID(id int32) {
 	u.id = id
 }
 
-func (u *User) GetLogin() string {
+func (u *User) GetLogin() *string {
 	return u.login
 }
 
-func (u *User) GetPassword() string {
+func (u *User) GetPassword() *string {
 	return u.password
 }
 
-func (u *User) GetCreateddate() time.Time {
+func (u *User) GetCreateddate() *time.Time {
 	return u.createddate
 }
