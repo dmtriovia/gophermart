@@ -81,15 +81,17 @@ func (m *AccountStorage) CreateAccount(
 	ctx *context.Context,
 	account *accountmodel.Account,
 ) error {
-	_, err := m.conn.Exec(
+	lastInsertID := 0
+
+	err := m.conn.QueryRow(
 		*ctx,
 		"INSERT INTO accounts (client,"+
-			" points,withdrawn) VALUES ($1,$2,$3)",
+			" points,withdrawn) VALUES ($1,$2,$3) RETURNING id",
 		account.GetClient().GetID(), account.GetPoints(),
-		account.GetWithdrawn())
+		account.GetWithdrawn()).Scan(&lastInsertID)
 	if err != nil {
 		return fmt.Errorf(
-			"CreateAccount->INSERT INTO error: %w", err)
+			"CreateAccount->Scan: %w", err)
 	}
 
 	return nil
@@ -99,15 +101,18 @@ func (m *AccountStorage) CreateAccountHistory(
 	ctx *context.Context,
 	accHist *accounthistorymodel.AccountHistory,
 ) error {
-	_, err := m.conn.Exec(
+	lastInsertID := 0
+
+	err := m.conn.QueryRow(
 		*ctx,
 		"INSERT INTO accounts_history"+
 			" (points_write_off,client_order)"+
-			" VALUES ($1,$2)",
-		accHist.GetpointsWriteOff(), accHist.GetOrder().GetID())
+			" VALUES ($1,$2) RETURNING id",
+		accHist.GetpointsWriteOff(),
+		accHist.GetOrder().GetID()).Scan(&lastInsertID)
 	if err != nil {
 		return fmt.Errorf(
-			"CreateAccountHistory->INSERT INTO error: %w", err)
+			"CreateAccountHistory->Scan: %w", err)
 	}
 
 	return nil

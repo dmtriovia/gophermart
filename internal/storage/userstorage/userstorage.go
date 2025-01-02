@@ -27,15 +27,17 @@ func (m *UserStorage) CreateUser(
 	ctx *context.Context,
 	user *usermodel.User,
 ) error {
-	_, err := m.conn.Exec(
+	lastInsertID := 0
+
+	err := m.conn.QueryRow(
 		*ctx,
 		"INSERT INTO users (login, password)"+
-			" VALUES ($1, $2)",
+			" VALUES ($1, $2) RETURNING id",
 		user.GetLogin(),
-		user.GetPassword())
+		user.GetPassword()).Scan(&lastInsertID)
 	if err != nil {
 		return fmt.Errorf(
-			"CreateUser->INSERT INTO error: %w", err)
+			"CreateUser->Scan: %w", err)
 	}
 
 	return nil

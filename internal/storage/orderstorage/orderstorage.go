@@ -31,15 +31,17 @@ func (m *OrderStorage) CreateOrder(
 	ctx *context.Context,
 	order *ordermodel.Order,
 ) error {
-	_, err := m.conn.Exec(
+	lastInsertID := 0
+
+	err := m.conn.QueryRow(
 		*ctx,
 		"INSERT INTO orders (identifier,client,"+
-			" accrual,status) VALUES ($1,$2,$3,$4)",
+			" accrual,status) VALUES ($1,$2,$3,$4) RETURNING id",
 		order.GetIdentifier(), order.GetClient().GetID(),
-		order.GetAccrual(), order.GetStatus())
+		order.GetAccrual(), order.GetStatus()).Scan(&lastInsertID)
 	if err != nil {
 		return fmt.Errorf(
-			"CreateOrder->INSERT INTO error: %w", err)
+			"CreateOrder->Scan: %w", err)
 	}
 
 	return nil
