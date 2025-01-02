@@ -54,7 +54,7 @@ func (h *Login) LoginHandler(
 
 	exist, user, err := h.serv.UserIsExist(reqAttr.Login)
 	if err != nil {
-		writer.WriteHeader(http.StatusUnauthorized)
+		writer.WriteHeader(http.StatusInternalServerError)
 		logger.DoInfoLogFromErr("login->UserIsExist",
 			err, h.attr.GetLogger())
 

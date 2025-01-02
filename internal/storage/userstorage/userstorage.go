@@ -76,8 +76,8 @@ func (m *UserStorage) GetUser(
 	}
 
 	user.SetUser(outID,
-		outPass,
 		outLogin,
+		outPass,
 		outCreateddate,
 	)
 
