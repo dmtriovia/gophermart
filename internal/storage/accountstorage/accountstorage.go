@@ -194,8 +194,8 @@ func (m *AccountStorage) GetAccountHistoryByClient(
 		order := &ordermodel.Order{}
 
 		err = rows.Scan(&OrdID, &OrdIdentifier,
-			&OrdCreateddate, &OrdAccrual,
-			&OrdPointsWriteOff, &OrdStatus,
+			&OrdCreateddate, &OrdStatus, &OrdAccrual,
+			&OrdPointsWriteOff,
 			&AcctHistID, &AccHistPointsWriteOff,
 			&AccHistOrdID, &AccHistCreateddate)
 		if err != nil {
