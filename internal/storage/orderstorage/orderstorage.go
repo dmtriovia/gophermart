@@ -91,7 +91,7 @@ func (m *OrderStorage) GetOrder(
 	err := m.conn.QueryRow(
 		*ctx, "select "+defOrderData+","+defUserData+
 			" from orders o"+
-			" left join users u on u.id = order.client"+
+			" left join users u on u.id = o.client"+
 			" where o.identifier=$1 LIMIT 1",
 		ident).Scan(&outOrderID,
 		&outOrderIdentifier,
@@ -103,12 +103,11 @@ func (m *OrderStorage) GetOrder(
 		&outUserLogin,
 		&outUserPass,
 		&outUserCreateddate)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, sql.ErrNoRows
-	}
-
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, sql.ErrNoRows
+		}
+
 		return nil,
 			fmt.Errorf("GetOrder->m.conn.QueryRow %w",
 				err)

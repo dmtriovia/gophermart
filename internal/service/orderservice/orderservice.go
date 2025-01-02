@@ -54,12 +54,10 @@ func (s *OrderService) OrderIsExist(ident string) (
 	defer cancel()
 
 	order, err := s.repository.GetOrder(&ctx, ident)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return false, nil, nil
-	}
-
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil, nil
+		}
 		return false, nil, fmt.Errorf(
 			"OrderIsExist->GetOrder: %w",
 			err)

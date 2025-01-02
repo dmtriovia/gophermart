@@ -156,9 +156,7 @@ func initSystemAttrs(attr *serverattr.ServerAttr) error {
 func runServer(attr *serverattr.ServerAttr) error {
 	err := attr.GetServer().ListenAndServe()
 
-	esc := errors.Is(err, http.ErrServerClosed)
-
-	if err != nil && !esc {
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		return fmt.Errorf(
 			"runServer->GetServer.ListenAndServe %w", err)
 	}

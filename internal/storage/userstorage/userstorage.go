@@ -64,12 +64,11 @@ func (m *UserStorage) GetUser(
 			" where login=$1 LIMIT 1",
 		login).Scan(&outID, &outLogin, &outPass,
 		&outCreateddate)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return nil, sql.ErrNoRows
-	}
-
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, sql.ErrNoRows
+		}
+
 		return nil,
 			fmt.Errorf("GetUser->m.conn.QueryRow %w",
 				err)

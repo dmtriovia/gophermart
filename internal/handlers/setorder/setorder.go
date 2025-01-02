@@ -1,7 +1,6 @@
 package setorder
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -128,15 +127,7 @@ func getReqData(
 		return fmt.Errorf("getReqData: %w", errEmptyData)
 	}
 
-	err = json.Unmarshal(body, reqAttr)
-	if err != nil {
-		return fmt.Errorf("getReqData->json.Unmarshal %w", err)
-	}
-
-	err = req.Body.Close()
-	if err != nil {
-		return fmt.Errorf("getReqData->req.Body.Close() %w", err)
-	}
+	reqAttr.Identifier = string(body)
 
 	return nil
 }

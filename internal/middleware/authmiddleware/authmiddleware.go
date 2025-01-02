@@ -96,7 +96,7 @@ func isValidToken(token *jwt.Token,
 		return false, nil
 	}
 
-	login, ok := claims["login"].(string)
+	login, ok := claims["id"].(string)
 	if !ok {
 		return false, nil
 	}
@@ -108,11 +108,11 @@ func isValidToken(token *jwt.Token,
 			"isValidToken->UserIsExist %w", err)
 	}
 
-	setSessionUserData(user, attr)
-
-	if exist {
+	if !exist {
 		return false, errUserNotExist
 	}
+
+	setSessionUserData(user, attr)
 
 	return true, nil
 }
@@ -151,9 +151,12 @@ func parseToken(inToken string,
 
 			return []byte(attr.GetSecret()), nil
 		})
+	if err != nil {
+		return nil, fmt.Errorf(
+			"AuthMiddleware>parseToken %w", err)
+	}
 
-	return token, fmt.Errorf(
-		"AuthMiddleware>parseToken %w", err)
+	return token, nil
 }
 
 func setErrStr(writer http.ResponseWriter,

@@ -35,12 +35,11 @@ func (s *AuthService) UserIsExist(login string) (
 	defer cancel()
 
 	user, err := s.repository.GetUser(&ctx, login)
-
-	if errors.Is(err, sql.ErrNoRows) {
-		return false, nil, nil
-	}
-
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil, nil
+		}
+
 		return false, nil, fmt.Errorf(
 			"UserIsExist->GetUser: %w",
 			err)
