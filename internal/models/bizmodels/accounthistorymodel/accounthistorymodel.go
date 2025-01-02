@@ -29,6 +29,10 @@ func (u *AccountHistory) GetID() int32 {
 	return u.id
 }
 
+func (u *AccountHistory) SetID(id int32) {
+	u.id = id
+}
+
 func (u *AccountHistory) GetCreateddate() time.Time {
 	return u.createddate
 }

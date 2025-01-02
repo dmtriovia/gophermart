@@ -27,7 +27,7 @@ func (m *UserStorage) CreateUser(
 	ctx *context.Context,
 	user *usermodel.User,
 ) error {
-	lastInsertID := 0
+	var lastInsertID int32
 
 	err := m.conn.QueryRow(
 		*ctx,
@@ -39,6 +39,8 @@ func (m *UserStorage) CreateUser(
 		return fmt.Errorf(
 			"CreateUser->Scan: %w", err)
 	}
+
+	user.SetID(lastInsertID)
 
 	return nil
 }

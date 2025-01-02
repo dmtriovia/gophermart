@@ -81,7 +81,7 @@ func (m *AccountStorage) CreateAccount(
 	ctx *context.Context,
 	account *accountmodel.Account,
 ) error {
-	lastInsertID := 0
+	var lastInsertID int32
 
 	err := m.conn.QueryRow(
 		*ctx,
@@ -94,6 +94,8 @@ func (m *AccountStorage) CreateAccount(
 			"CreateAccount->Scan: %w", err)
 	}
 
+	account.SetID(lastInsertID)
+
 	return nil
 }
 
@@ -101,7 +103,7 @@ func (m *AccountStorage) CreateAccountHistory(
 	ctx *context.Context,
 	accHist *accounthistorymodel.AccountHistory,
 ) error {
-	lastInsertID := 0
+	var lastInsertID int32
 
 	err := m.conn.QueryRow(
 		*ctx,
@@ -114,6 +116,8 @@ func (m *AccountStorage) CreateAccountHistory(
 		return fmt.Errorf(
 			"CreateAccountHistory->Scan: %w", err)
 	}
+
+	accHist.SetID(lastInsertID)
 
 	return nil
 }

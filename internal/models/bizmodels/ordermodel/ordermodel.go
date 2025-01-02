@@ -66,6 +66,10 @@ func (o *Order) GetID() int32 {
 	return o.id
 }
 
+func (o *Order) SetID(id int32) {
+	o.id = id
+}
+
 func (o *Order) GetAccrual() int32 {
 	return o.accrual
 }

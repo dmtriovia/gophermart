@@ -31,7 +31,7 @@ func (m *OrderStorage) CreateOrder(
 	ctx *context.Context,
 	order *ordermodel.Order,
 ) error {
-	lastInsertID := 0
+	var lastInsertID int32
 
 	err := m.conn.QueryRow(
 		*ctx,
@@ -43,6 +43,8 @@ func (m *OrderStorage) CreateOrder(
 		return fmt.Errorf(
 			"CreateOrder->Scan: %w", err)
 	}
+
+	order.SetID(lastInsertID)
 
 	return nil
 }

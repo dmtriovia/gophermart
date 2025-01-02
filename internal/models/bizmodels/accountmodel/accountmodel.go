@@ -36,6 +36,10 @@ func (u *Account) GetID() int32 {
 	return u.id
 }
 
+func (u *Account) SetID(id int32) {
+	u.id = id
+}
+
 func (u *Account) GetCreateddate() time.Time {
 	return u.createddate
 }

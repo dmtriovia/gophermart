@@ -37,6 +37,10 @@ func (u *User) GetID() int32 {
 	return u.id
 }
 
+func (u *User) SetID(id int32) {
+	u.id = id
+}
+
 func (u *User) GetLogin() string {
 	return u.login
 }
