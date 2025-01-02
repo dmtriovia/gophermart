@@ -72,6 +72,7 @@ func (h *Withdraw) WithdrawHandler(
 
 	belongsToSessionUser := order.
 		GetClient().GetID() == h.attr.GetSessionUser().GetID()
+
 	if !isExist || !belongsToSessionUser {
 		writer.WriteHeader(http.StatusUnprocessableEntity)
 

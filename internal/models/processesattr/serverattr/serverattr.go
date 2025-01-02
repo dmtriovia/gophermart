@@ -128,7 +128,8 @@ func (p *ServerAttr) Init() error {
 	p.orderService = orderservice.NewOrderService(
 		p.orderStorage, p.waitSecRespDB)
 	p.calculateService = calculateservice.NewCalculateService(
-		p.accountStorage, p.waitSecRespDB, p.pgxConn)
+		p.accountStorage,
+		p.orderStorage, p.waitSecRespDB, p.pgxConn)
 
 	initHandlersAttr(p)
 	p.authMidAttr = &authmiddlewareattr.AuthMiddlewareAttr{}
@@ -207,7 +208,7 @@ func initAPIMethods(
 	setMethod(post, "register", mux, attr, register, false)
 	setMethod(post, "login", mux, attr, login, false)
 	setMethod(post, "orders", mux, attr, setOrder, true)
-	setMethod(post, "withdraw", mux, attr, withdraw, false)
+	setMethod(post, "withdraw", mux, attr, withdraw, true)
 
 	mux.MethodNotAllowedHandler = hNotAllowed
 }

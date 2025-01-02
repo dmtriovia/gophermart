@@ -21,6 +21,7 @@ type CalculateService struct {
 
 func NewCalculateService(
 	stor storage.AccountStorage,
+	acco storage.OrderStorage,
 	ctxDur time.Duration,
 	pgxC *pgx.Conn,
 ) *CalculateService {
@@ -28,6 +29,7 @@ func NewCalculateService(
 		pgxConn:     pgxC,
 		accRepo:     stor,
 		ctxDuration: ctxDur,
+		accOrder:    acco,
 	}
 }
 
