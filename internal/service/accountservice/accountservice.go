@@ -8,22 +8,18 @@ import (
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accounthistorymodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/storage"
-	"github.com/jackc/pgx/v5"
 )
 
 type AccountService struct {
 	accRepo     storage.AccountStorage
 	ctxDuration time.Duration
-	pgxConn     *pgx.Conn
 }
 
 func NewAccountService(
 	stor storage.AccountStorage,
 	ctxDur time.Duration,
-	pgxC *pgx.Conn,
 ) *AccountService {
 	return &AccountService{
-		pgxConn:     pgxC,
 		accRepo:     stor,
 		ctxDuration: ctxDur,
 	}

@@ -122,7 +122,7 @@ func (p *ServerAttr) Init() error {
 	p.accountStorage.Initiate(p.pgxConn)
 	p.userStorage.Initiate(p.pgxConn)
 	p.accountService = accountservice.NewAccountService(
-		p.accountStorage, p.waitSecRespDB, p.pgxConn)
+		p.accountStorage, p.waitSecRespDB)
 	p.authService = authservice.NewAuthService(
 		p.userStorage, p.waitSecRespDB)
 	p.orderService = orderservice.NewOrderService(
@@ -218,7 +218,7 @@ func setMethod(
 	mux *mux.Router,
 	attr *ServerAttr,
 	handler func(http.ResponseWriter, *http.Request),
-	onluAuth bool,
+	onlyAuth bool,
 ) {
 	subRouter := mux.Methods(method).Subrouter()
 	subRouter.HandleFunc(attr.apiURL+url,
@@ -226,7 +226,7 @@ func setMethod(
 	subRouter.Use(
 		loggermiddleware.RequestLogger(attr.zapLogger))
 
-	if onluAuth {
+	if onlyAuth {
 		subRouter.Use(
 			authmiddleware.AuthMiddleware(attr.authMidAttr))
 	}
@@ -291,9 +291,9 @@ func (p *ServerAttr) SetAccrualSystemAddress(
 }
 
 func (p *ServerAttr) SetPgxConn(
-	ctx context.Context,
+	ctxDB context.Context,
 ) error {
-	dbConn, err := pgx.Connect(ctx, p.databaseURL)
+	dbConn, err := pgx.Connect(ctxDB, p.databaseURL)
 	if err != nil {
 		return fmt.Errorf("initiateDBconn->pgx.Connect %w", err)
 	}

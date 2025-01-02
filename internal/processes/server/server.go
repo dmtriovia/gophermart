@@ -7,6 +7,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -24,14 +25,17 @@ var errParseFlags = errors.New("addr is not valid")
 var MigrationsFS embed.FS
 
 func RunProcess(waitG *sync.WaitGroup) {
+	fmt.Println("Run server process")
+
 	attr := &serverattr.ServerAttr{}
 
 	err := attr.PreInit()
 	if err != nil {
-		fmt.Println("RP->attr.preInit: %w", err)
+		logger.DoInfoLogFromErr(
+			"RP->attr.preInit", err, attr.GetLogger())
 	}
 
-	ctx, cancel := context.WithTimeout(
+	ctxDB, cancel := context.WithTimeout(
 		context.Background(),
 		attr.GetWaitSecRespDB())
 
@@ -47,17 +51,17 @@ func RunProcess(waitG *sync.WaitGroup) {
 		return
 	}
 
-	err = attr.Init()
-	if err != nil {
-		fmt.Println("RP->attr.Init: %w", err)
-	}
-
-	err = attr.SetPgxConn(ctx)
+	err = attr.SetPgxConn(ctxDB)
 	if err != nil {
 		logger.DoInfoLogFromErr(
 			"RP->SetPgxConn", err, attr.GetLogger())
 
 		return
+	}
+
+	err = attr.Init()
+	if err != nil {
+		fmt.Println("RP->attr.Init: %w", err)
 	}
 
 	err = UseMigrations(attr)
@@ -68,7 +72,7 @@ func RunProcess(waitG *sync.WaitGroup) {
 		return
 	}
 
-	go waitClose(ctx, attr, waitG)
+	go waitClose(attr, waitG)
 
 	err = runServer(attr)
 	if err != nil {
@@ -77,10 +81,11 @@ func RunProcess(waitG *sync.WaitGroup) {
 
 		return
 	}
+
+	fmt.Println("End server process")
 }
 
 func waitClose(
-	ctx context.Context,
 	attr *serverattr.ServerAttr,
 	waitG *sync.WaitGroup,
 ) {
@@ -93,7 +98,7 @@ func waitClose(
 	for {
 		_, ok := <-channelCancel
 		if ok {
-			err := attr.GetServer().Shutdown(ctx)
+			err := attr.GetServer().Shutdown(context.TODO())
 			if err != nil {
 				fmt.Println("RP->Shutdown: %w", err)
 			}
@@ -150,7 +155,10 @@ func initSystemAttrs(attr *serverattr.ServerAttr) error {
 
 func runServer(attr *serverattr.ServerAttr) error {
 	err := attr.GetServer().ListenAndServe()
-	if err != nil {
+
+	esc := errors.Is(err, http.ErrServerClosed)
+
+	if err != nil && !esc {
 		return fmt.Errorf(
 			"runServer->GetServer.ListenAndServe %w", err)
 	}
