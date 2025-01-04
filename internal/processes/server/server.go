@@ -122,7 +122,7 @@ func initiateFlags(attr *serverattr.ServerAttr) {
 }
 
 func initSystemAttrs(attr *serverattr.ServerAttr) error {
-	RunAddress := os.Getenv("ADDRESS")
+	RunAddress := os.Getenv("RUN_ADDRESS")
 	DatabaseURL := os.Getenv("DATABASE_URI")
 	AccrualSystemAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS")
 
