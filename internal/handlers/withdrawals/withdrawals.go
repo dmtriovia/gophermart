@@ -57,6 +57,9 @@ func (h *Withdrawals) WithdrawalsHandler(
 		return
 	}
 
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+
 	_, err = writer.Write(*marshal)
 	if err != nil {
 		logger.DoInfoLogFromErr(
@@ -66,9 +69,6 @@ func (h *Withdrawals) WithdrawalsHandler(
 
 		return
 	}
-
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
 }
 
 func GetAccountHistoryByClient(

@@ -13,7 +13,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-const tokenLen = 2
+// const tokenLen = 2
 
 var errUnexpectedMethod = errors.New("data is empty")
 
@@ -35,16 +35,16 @@ func AuthMiddleware(
 			}
 
 			authToken := strings.Split(authHeader, " ")
-			isBearer := authToken[0] == "Bearer"
+			/*isBearer := authToken[0] == "Bearer"
 			isLenValid := len(authToken) == tokenLen
 
 			if !isLenValid || !isBearer {
 				setErrStr(writer, attr, "Invalid token format")
 
 				return
-			}
+			}*/
 
-			token, err := parseToken(authToken[1], attr)
+			token, err := parseToken(authToken[0], attr)
 			if err != nil {
 				setErr(writer, attr, err)
 

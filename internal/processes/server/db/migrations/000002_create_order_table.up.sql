@@ -2,7 +2,7 @@ CREATE TABLE orders (
    id serial primary key,
    identifier varchar not null unique,
    client integer NOT NULL REFERENCES users(id),
-   accrual integer,
+   accrual REAL,
    points_write_off REAL,
    status varchar not null,
    createddate TIMESTAMP default now()

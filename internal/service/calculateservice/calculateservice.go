@@ -3,11 +3,13 @@ package calculateservice
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accounthistorymodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
+	gsfcs "github.com/dmitrovia/gophermart/internal/models/endpointsattr/getstatusfromcalcsystemattr"
 	"github.com/dmitrovia/gophermart/internal/storage"
 	"github.com/jackc/pgx/v5"
 )
@@ -72,7 +74,7 @@ func (s *CalculateService) CalculatePoints(
 			err)
 	}
 
-	err = CreateAccountHistory(s, &ctx, order, points)
+	err = createAccountHistory(s, &ctx, order, points)
 	if err != nil {
 		return fmt.Errorf(
 			"CalculatePoints->CreateAccountHistory: %w",
@@ -87,7 +89,7 @@ func (s *CalculateService) CalculatePoints(
 	return nil
 }
 
-func CreateAccountHistory(
+func createAccountHistory(
 	service *CalculateService,
 	ctx *context.Context,
 	order *ordermodel.Order,
@@ -105,4 +107,40 @@ func CreateAccountHistory(
 	}
 
 	return nil
+}
+
+func (
+	s *CalculateService,
+) UpdateStatusOrdersAndCalculatePoints() error {
+	return nil
+}
+
+func getStatusFromCalcSystem(
+	ctx *context.Context,
+	attr *gsfcs.GetStatusFromCalcSystemAttr,
+) (
+	*http.Response, error,
+) {
+	req, err := http.NewRequestWithContext(
+		*ctx,
+		attr.GetMethod(),
+		attr.GetURL(),
+		attr.GetReqData())
+	if err != nil {
+		return nil,
+			fmt.Errorf(
+				"GetStatusFromCalcSystem->NewRequestWithContext: %w",
+				err)
+	}
+
+	req.Header.Set("Content-Type", attr.GetContentType())
+
+	resp, err := attr.GetClient().Do(req)
+	if err != nil {
+		return nil,
+			fmt.Errorf("GetStatusFromCalcSystem->Do: %w",
+				err)
+	}
+
+	return resp, nil
 }

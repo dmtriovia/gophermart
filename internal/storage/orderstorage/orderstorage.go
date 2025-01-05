@@ -49,6 +49,52 @@ func (m *OrderStorage) CreateOrder(
 	return nil
 }
 
+func (m *OrderStorage) UpdateStatusByID(
+	ctx *context.Context,
+	orderID int32,
+	status string,
+) (bool, error) {
+	rows, err := m.conn.Exec(
+		*ctx,
+		"UPDATE orders SET ststus=$1 where id=$2",
+		status,
+		orderID)
+	if err != nil {
+		return false, fmt.Errorf(
+			"UpdateStatusByID->m.conn.Exec( %w", err)
+	}
+
+	if rows.RowsAffected() == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
+func (m *OrderStorage) UpdateStatusAccrualByID(
+	ctx *context.Context,
+	orderID int32,
+	accrual float32,
+	status string,
+) (bool, error) {
+	rows, err := m.conn.Exec(
+		*ctx,
+		"UPDATE orders SET ststus=$1, accrual=$2 where id=$3",
+		status,
+		accrual,
+		orderID)
+	if err != nil {
+		return false, fmt.Errorf(
+			"UpdateStatusByID->m.conn.Exec( %w", err)
+	}
+
+	if rows.RowsAffected() == 0 {
+		return false, nil
+	}
+
+	return true, nil
+}
+
 func (m *OrderStorage) PlusPointsWriteOffByID(
 	ctx *context.Context,
 	orderID int32,
@@ -81,10 +127,10 @@ func (m *OrderStorage) GetOrder(
 	user := &usermodel.User{}
 
 	var (
-		outOrderID, outOrderAccrual, outUserID  *int32
+		outOrderID, outUserID                   *int32
 		outOrderStatus, outOrderIdentifier      *string
 		outOrderCreateddate, outUserCreateddate *time.Time
-		outOrderPointsWriteOff                  *float32
+		outOrderPointsWriteOff, outOrderAccrual *float32
 		outUserLogin, outUserPass               *string
 	)
 
@@ -134,11 +180,11 @@ func (m *OrderStorage) GetOrdersByClient(
 	clientID int32,
 ) (*[]ordermodel.Order, *[]error, error) {
 	var (
-		outOrderID, outUserID, outOrderAccrual  *int32
+		outOrderID, outUserID                   *int32
 		outOrderStatus, outOrderIdentifier      *string
 		outUserLogin, outUserPass               *string
 		outUserCreateddate, outOrderCreateddate *time.Time
-		outOrderPointsWriteOff                  *float32
+		outOrderPointsWriteOff, outOrderAccrual *float32
 	)
 
 	rows, err := m.conn.Query(

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/dmitrovia/gophermart/internal/handlers/balance"
-	"github.com/dmitrovia/gophermart/internal/handlers/getorder"
 	"github.com/dmitrovia/gophermart/internal/handlers/getorders"
 	"github.com/dmitrovia/gophermart/internal/handlers/login"
 	"github.com/dmitrovia/gophermart/internal/handlers/notallowed"
@@ -15,7 +14,6 @@ import (
 	"github.com/dmitrovia/gophermart/internal/handlers/setorder"
 	"github.com/dmitrovia/gophermart/internal/handlers/withdraw"
 	"github.com/dmitrovia/gophermart/internal/handlers/withdrawals"
-	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/middleware/authmiddleware"
 	"github.com/dmitrovia/gophermart/internal/middleware/loggermiddleware"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
@@ -40,8 +38,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const initwaitSecRespDB = 10
-
 const initReadTimeout = 15
 
 const initWriteTimeout = 15
@@ -49,61 +45,35 @@ const initWriteTimeout = 15
 const initIdleTimeout = 60
 
 type ServerAttr struct {
-	runAddress           string
-	databaseURL          string
-	accrualSystemAddress string
-	defPORT              string
-	defAccSysAddr        string
-	defDatabaseURL       string
-	validAddrPattern     string
-	apiURL               string
-	migrationsDir        string
-	zapLogLevel          string
-	server               *http.Server
-	zapLogger            *zap.Logger
-	orderStorage         *orderstorage.OrderStorage
-	userStorage          *userstorage.UserStorage
-	accountStorage       *accountstorage.AccountStorage
-	accountService       *accountservice.AccountService
-	authService          *authservice.AuthService
-	orderService         *orderservice.OrderService
-	calculateService     *calculateservice.CalculateService
-	pgxConn              *pgx.Conn
-	waitSecRespDB        time.Duration
-	defReadTimeout       time.Duration
-	defWriteTimeout      time.Duration
-	defIdleTimeout       time.Duration
-	withdrawalsAttr      *withdrawalsattr.WithdrawalsAttr
-	loginAttr            *loginattr.LoginAttr
-	rigsterAttr          *registerattr.RegisterAttr
-	setOrderAttr         *setorderattr.SetOrderAttr
-	getOrdersAttr        *getordersattr.GetOrdersAttr
-	getOrderAttr         *getorderattr.GetOrderAttr
-	balanceAttr          *balanceattr.BalanceAttr
-	withdrawAttr         *withdrawattr.WithdrawAttr
-	authMidAttr          *authmiddlewareattr.AuthMiddlewareAttr
-	sessionUser          *usermodel.User
-}
-
-func (p *ServerAttr) PreInit() error {
-	p.zapLogLevel = "info"
-	p.waitSecRespDB = initwaitSecRespDB * time.Second
-	p.validAddrPattern = "^[a-zA-Z/ ]{1,100}:[0-9]{1,10}$"
-	p.defPORT = "localhost:8080"
-	p.defAccSysAddr, p.defDatabaseURL = "",
-		"postgres://postgres:postgres@localhost:5432"+
-			"/praktikum?sslmode=disable"
-
-	logger, err := logger.Initialize(p.zapLogLevel)
-	if err != nil {
-		return fmt.Errorf(
-			"PreInit->logger.Initialize %w",
-			err)
-	}
-
-	p.zapLogger = logger
-
-	return nil
+	runAddress       string
+	databaseURL      string
+	validAddrPattern string
+	apiURL           string
+	migrationsDir    string
+	server           *http.Server
+	zapLogger        *zap.Logger
+	orderStorage     *orderstorage.OrderStorage
+	userStorage      *userstorage.UserStorage
+	accountStorage   *accountstorage.AccountStorage
+	accountService   *accountservice.AccountService
+	authService      *authservice.AuthService
+	orderService     *orderservice.OrderService
+	calculateService *calculateservice.CalculateService
+	pgxConn          *pgx.Conn
+	waitSecRespDB    time.Duration
+	defReadTimeout   time.Duration
+	defWriteTimeout  time.Duration
+	defIdleTimeout   time.Duration
+	withdrawalsAttr  *withdrawalsattr.WithdrawalsAttr
+	loginAttr        *loginattr.LoginAttr
+	rigsterAttr      *registerattr.RegisterAttr
+	setOrderAttr     *setorderattr.SetOrderAttr
+	getOrdersAttr    *getordersattr.GetOrdersAttr
+	getOrderAttr     *getorderattr.GetOrderAttr
+	balanceAttr      *balanceattr.BalanceAttr
+	withdrawAttr     *withdrawattr.WithdrawAttr
+	authMidAttr      *authmiddlewareattr.AuthMiddlewareAttr
+	sessionUser      *usermodel.User
 }
 
 func (p *ServerAttr) Init() error {
@@ -180,9 +150,7 @@ func initAPIMethods(
 	post := http.MethodPost
 
 	getOrders := getorders.NewGetOrdersHandler(
-		attr.orderService, attr.getOrdersAttr).GetOrderHandler
-	getOrder := getorder.NewGetOrderHandler(attr.orderService,
-		attr.getOrderAttr).GetOrderHandler
+		attr.orderService, attr.getOrdersAttr).GetOrdersHandler
 	balance := balance.NewBalanceHandler(
 		attr.accountService, attr.balanceAttr).BalanceHandler
 	withdrawals := withdrawals.NewWithdrawalsHandler(
@@ -201,8 +169,6 @@ func initAPIMethods(
 		attr.calculateService, attr.withdrawAttr).WithdrawHandler
 
 	setMethod(get, "orders", mux, attr, getOrders, true)
-	setMethod(get, "orders/{number}", mux, attr, getOrder,
-		true)
 	setMethod(get, "balance", mux, attr, balance, true)
 	setMethod(get, "withdrawals", mux, attr, withdrawals, true)
 	setMethod(post, "register", mux, attr, register, false)
@@ -237,6 +203,10 @@ func (p *ServerAttr) GetLogger() *zap.Logger {
 	return p.zapLogger
 }
 
+func (p *ServerAttr) SetLogger(logger *zap.Logger) {
+	p.zapLogger = logger
+}
+
 func (p *ServerAttr) GetmigrationsDir() string {
 	return p.migrationsDir
 }
@@ -245,28 +215,16 @@ func (p *ServerAttr) GetValidAddrPattern() string {
 	return p.validAddrPattern
 }
 
+func (p *ServerAttr) SetValidAddrPattern(pattern string) {
+	p.validAddrPattern = pattern
+}
+
 func (p *ServerAttr) GetServer() *http.Server {
 	return p.server
 }
 
-func (p *ServerAttr) GetDefPort() string {
-	return p.defPORT
-}
-
 func (p *ServerAttr) GetRunAddress() *string {
 	return &p.runAddress
-}
-
-func (p *ServerAttr) GetDefAccSysAddr() string {
-	return p.defAccSysAddr
-}
-
-func (p *ServerAttr) GetAccrualSystemAddress() *string {
-	return &p.accrualSystemAddress
-}
-
-func (p *ServerAttr) GetDefDatabaseURL() string {
-	return p.defDatabaseURL
 }
 
 func (p *ServerAttr) GetDatabaseURL() *string {
@@ -277,18 +235,16 @@ func (p *ServerAttr) GetWaitSecRespDB() time.Duration {
 	return p.waitSecRespDB
 }
 
+func (p *ServerAttr) SetWaitSecRespDB(dur time.Duration) {
+	p.waitSecRespDB = dur
+}
+
 func (p *ServerAttr) SetRunAddress(addr string) {
 	p.runAddress = addr
 }
 
 func (p *ServerAttr) SetDatabaseURL(databaseURL string) {
 	p.databaseURL = databaseURL
-}
-
-func (p *ServerAttr) SetAccrualSystemAddress(
-	accSysAddr string,
-) {
-	p.accrualSystemAddress = accSysAddr
 }
 
 func (p *ServerAttr) SetPgxConn(

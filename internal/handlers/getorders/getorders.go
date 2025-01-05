@@ -24,7 +24,7 @@ func NewGetOrdersHandler(
 	return &GetOrders{serv: s, attr: inAttr}
 }
 
-func (h *GetOrders) GetOrderHandler(
+func (h *GetOrders) GetOrdersHandler(
 	writer http.ResponseWriter,
 	_ *http.Request,
 ) {
@@ -54,6 +54,9 @@ func (h *GetOrders) GetOrderHandler(
 		return
 	}
 
+	writer.Header().Set("Content-Type", "application/json")
+	writer.WriteHeader(http.StatusOK)
+
 	_, err = writer.Write(*marshal)
 	if err != nil {
 		logger.DoInfoLogFromErr(
@@ -63,9 +66,6 @@ func (h *GetOrders) GetOrderHandler(
 
 		return
 	}
-
-	writer.Header().Set("Content-Type", "application/json")
-	writer.WriteHeader(http.StatusOK)
 }
 
 func getOrdersByClient(

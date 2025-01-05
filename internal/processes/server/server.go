@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"embed"
 	"errors"
-	"flag"
 	"fmt"
 	"net/http"
 	"os"
@@ -13,61 +12,42 @@ import (
 	"sync"
 	"syscall"
 
-	"github.com/dmitrovia/gophermart/internal/functions/validatef"
 	"github.com/dmitrovia/gophermart/internal/logger"
 	"github.com/dmitrovia/gophermart/internal/migrator"
 	"github.com/dmitrovia/gophermart/internal/models/processesattr/serverattr"
 )
 
-var errParseFlags = errors.New("addr is not valid")
-
 //go:embed db/migrations/*.sql
 var MigrationsFS embed.FS
 
-func RunProcess(waitG *sync.WaitGroup) {
+func RunProcess(
+	waitG *sync.WaitGroup,
+	attr *serverattr.ServerAttr,
+) {
 	fmt.Println("Run server process")
 
-	attr := &serverattr.ServerAttr{}
-
-	err := attr.PreInit()
-	if err != nil {
-		logger.DoInfoLogFromErr(
-			"RP->attr.preInit", err, attr.GetLogger())
-	}
-
 	ctxDB, cancel := context.WithTimeout(
-		context.Background(),
-		attr.GetWaitSecRespDB())
+		context.Background(), attr.GetWaitSecRespDB())
 
 	defer cancel()
 
-	initiateFlags(attr)
-
-	err = initSystemAttrs(attr)
+	err := attr.SetPgxConn(ctxDB)
 	if err != nil {
-		logger.DoInfoLogFromErr(
-			"RP->initSystemAttrs", err, attr.GetLogger())
-
-		return
-	}
-
-	err = attr.SetPgxConn(ctxDB)
-	if err != nil {
-		logger.DoInfoLogFromErr(
-			"RP->SetPgxConn", err, attr.GetLogger())
+		doErr(waitG, err, "RP->SetPgxConn", attr)
 
 		return
 	}
 
 	err = attr.Init()
 	if err != nil {
-		fmt.Println("RP->attr.Init: %w", err)
+		doErr(waitG, err, "RP->Init", attr)
+
+		return
 	}
 
 	err = UseMigrations(attr)
 	if err != nil {
-		logger.DoInfoLogFromErr(
-			"RP->UseMigrations", err, attr.GetLogger())
+		doErr(waitG, err, "RP->UseMigrations", attr)
 
 		return
 	}
@@ -76,13 +56,22 @@ func RunProcess(waitG *sync.WaitGroup) {
 
 	err = runServer(attr)
 	if err != nil {
-		logger.DoInfoLogFromErr(
-			"RP->runServer", err, attr.GetLogger())
+		doErr(waitG, err, "RP->runServer", attr)
 
 		return
 	}
 
 	fmt.Println("End server process")
+}
+
+func doErr(waitG *sync.WaitGroup,
+	err error,
+	errMsg string,
+	attr *serverattr.ServerAttr,
+) {
+	logger.DoInfoLogFromErr(
+		errMsg, err, attr.GetLogger())
+	waitG.Done()
 }
 
 func waitClose(
@@ -108,49 +97,6 @@ func waitClose(
 			return
 		}
 	}
-}
-
-func initiateFlags(attr *serverattr.ServerAttr) {
-	flag.StringVar(attr.GetDatabaseURL(),
-		"d", attr.GetDefDatabaseURL(),
-		"database connection address.")
-	flag.StringVar(attr.GetAccrualSystemAddress(),
-		"r", attr.GetDefAccSysAddr(),
-		"address of the accrual calculation system")
-	flag.StringVar(attr.GetRunAddress(),
-		"a", attr.GetDefPort(), "Port to listen on.")
-}
-
-func initSystemAttrs(attr *serverattr.ServerAttr) error {
-	RunAddress := os.Getenv("RUN_ADDRESS")
-	DatabaseURL := os.Getenv("DATABASE_URI")
-	AccrualSystemAddress := os.Getenv("ACCRUAL_SYSTEM_ADDRESS")
-
-	if RunAddress != "" {
-		res, err := validatef.IsMatchesTemplate(
-			RunAddress, attr.GetValidAddrPattern())
-		if err != nil {
-			return fmt.Errorf(
-				"initSystemAttrs->IsMatchesTemplate: %w",
-				err)
-		}
-
-		if !res {
-			return errParseFlags
-		}
-
-		attr.SetRunAddress(RunAddress)
-	}
-
-	if DatabaseURL != "" {
-		attr.SetDatabaseURL(DatabaseURL)
-	}
-
-	if AccrualSystemAddress != "" {
-		attr.SetAccrualSystemAddress(AccrualSystemAddress)
-	}
-
-	return nil
 }
 
 func runServer(attr *serverattr.ServerAttr) error {

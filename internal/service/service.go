@@ -38,4 +38,6 @@ type CalculateService interface {
 		order *ordermodel.Order,
 		points float32,
 	) error
+
+	UpdateStatusOrdersAndCalculatePoints() error
 }

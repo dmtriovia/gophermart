@@ -165,10 +165,11 @@ func (m *AccountStorage) GetAccountHistoryByClient(
 	clientID int32,
 ) (*[]accounthistorymodel.AccountHistory, *[]error, error) {
 	var (
-		OrdCreateddate, AccHistCreateddate          *time.Time
-		OrdID, AcctHistID, AccHistOrdID, OrdAccrual *int32
-		OrdStatus, OrdIdentifier                    *string
-		OrdPointsWriteOff, AccHistPointsWriteOff    *float32
+		OrdCreateddate, AccHistCreateddate       *time.Time
+		OrdID, AcctHistID, AccHistOrdID          *int32
+		OrdStatus, OrdIdentifier                 *string
+		OrdPointsWriteOff, AccHistPointsWriteOff *float32
+		OrdAccrual                               *float32
 	)
 
 	rows, err := m.conn.Query(

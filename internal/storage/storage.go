@@ -37,6 +37,12 @@ type OrderStorage interface {
 		orderID int32,
 		newValuePointsWriteOff float32,
 	) (bool, error)
+
+	UpdateStatusByID(
+		ctx *context.Context,
+		orderID int32,
+		status string,
+	) (bool, error)
 }
 
 type AccountStorage interface {

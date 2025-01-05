@@ -20,7 +20,7 @@ type Order struct {
 	client         *usermodel.User
 	createddate    *time.Time
 	status         *string
-	accrual        *int32
+	accrual        *float32
 	pointsWriteOff *float32
 }
 
@@ -30,7 +30,7 @@ func (o *Order) SetOrder(
 	client *usermodel.User,
 	createddate *time.Time,
 	status *string,
-	accrual *int32,
+	accrual *float32,
 	pointsWriteOff *float32,
 ) {
 	o.id = idDB
@@ -70,7 +70,7 @@ func (o *Order) SetID(id int32) {
 	o.id = id
 }
 
-func (o *Order) GetAccrual() *int32 {
+func (o *Order) GetAccrual() *float32 {
 	return o.accrual
 }
 
