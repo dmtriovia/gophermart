@@ -17,16 +17,17 @@ import (
 )
 
 type CalcSysAttr struct {
-	databaseURL              string
-	accrualSystemAddress     string
-	zapLogger                *zap.Logger
-	orderStorage             *orderstorage.OrderStorage
-	userStorage              *userstorage.UserStorage
-	accountStorage           *accountstorage.AccountStorage
-	accountService           *accountservice.AccountService
-	authService              *authservice.AuthService
-	orderService             *orderservice.OrderService
-	calculateService         *calculateservice.CalculateService
+	databaseURL          string
+	accrualSystemAddress string
+	zapLogger            *zap.Logger
+	orderStorage         *orderstorage.OrderStorage
+	userStorage          *userstorage.UserStorage
+	accountStorage       *accountstorage.AccountStorage
+	accountService       *accountservice.AccountService
+	authService          *authservice.AuthService
+	orderService         *orderservice.OrderService
+	calculateService     *calculateservice.
+				CalculateService
 	pgxConn                  *pgx.Conn
 	waitSecRespDB            time.Duration
 	waitSecRespCalcService   time.Duration
@@ -48,7 +49,8 @@ func (p *CalcSysAttr) Init() {
 		p.orderStorage, p.waitSecRespDB)
 	p.calculateService = calculateservice.NewCalculateService(
 		p.accountStorage,
-		p.orderStorage, p.waitSecRespDB, p.pgxConn)
+		p.orderStorage,
+		p.waitSecRespDB, p.waitSecRespCalcService, p.pgxConn)
 }
 
 func (

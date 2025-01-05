@@ -44,6 +44,8 @@ const initWriteTimeout = 15
 
 const initIdleTimeout = 60
 
+const initDurationOutService = 10
+
 type ServerAttr struct {
 	runAddress       string
 	databaseURL      string
@@ -78,6 +80,7 @@ type ServerAttr struct {
 
 func (p *ServerAttr) Init() error {
 	p.sessionUser = &usermodel.User{}
+	durationOutService := time.Duration(initDurationOutService)
 
 	p.defReadTimeout,
 		p.defWriteTimeout = initReadTimeout*time.Second,
@@ -99,7 +102,8 @@ func (p *ServerAttr) Init() error {
 		p.orderStorage, p.waitSecRespDB)
 	p.calculateService = calculateservice.NewCalculateService(
 		p.accountStorage,
-		p.orderStorage, p.waitSecRespDB, p.pgxConn)
+		p.orderStorage,
+		p.waitSecRespDB, durationOutService, p.pgxConn)
 
 	initHandlersAttr(p)
 	p.authMidAttr = &authmiddlewareattr.AuthMiddlewareAttr{}

@@ -95,21 +95,22 @@ func (m *OrderStorage) UpdateStatusAccrualByID(
 	return true, nil
 }
 
-func (m *OrderStorage) PlusPointsWriteOffByID(
+func (m *OrderStorage) ChangePointsWriteOffByID(
 	ctx *context.Context,
 	orderID int32,
 	newValuePointsWriteOff float32,
+	sign string,
 ) (bool, error) {
 	t := "points_write_off"
 
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE orders SET "+t+"="+t+"+$1 where id=$2",
+		"UPDATE orders SET "+t+"="+t+sign+"$1 where id=$2",
 		newValuePointsWriteOff,
 		orderID)
 	if err != nil {
 		return false, fmt.Errorf(
-			"PlusPointsWriteOffByID->m.conn.Exec( %w", err)
+			"ChangePointsWriteOffByID->m.conn.Exec( %w", err)
 	}
 
 	if rows.RowsAffected() == 0 {
@@ -197,6 +198,59 @@ func (m *OrderStorage) GetOrdersByClient(
 	if err != nil {
 		return nil, nil, fmt.Errorf(
 			"GetOrdersByClient->m.conn.Query %w", err)
+	}
+
+	defer rows.Close()
+
+	orders := make([]ordermodel.Order, 0)
+	errors := make([]error, 0)
+
+	for rows.Next() {
+		order := &ordermodel.Order{}
+		user := &usermodel.User{}
+		err = rows.Scan(&outOrderID, &outOrderIdentifier,
+			&outOrderCreateddate, &outOrderStatus, &outOrderAccrual,
+			&outOrderPointsWriteOff, &outUserID,
+			&outUserLogin, &outUserPass, &outUserCreateddate)
+
+		if err != nil {
+			errors = append(errors, err)
+		} else {
+			user.SetUser(*outUserID, outUserPass,
+				outUserLogin, outUserCreateddate)
+			order.SetOrder(
+				*outOrderID, outOrderIdentifier, user,
+				outOrderCreateddate, outOrderStatus,
+				outOrderAccrual, outOrderPointsWriteOff)
+
+			orders = append(orders, *order)
+		}
+	}
+
+	return &orders, &errors, nil
+}
+
+func (m *OrderStorage) GetOrdersByStatuses(
+	ctx *context.Context,
+	statuses string,
+) (*[]ordermodel.Order, *[]error, error) {
+	var (
+		outOrderID, outUserID                   *int32
+		outOrderStatus, outOrderIdentifier      *string
+		outUserLogin, outUserPass               *string
+		outUserCreateddate, outOrderCreateddate *time.Time
+		outOrderPointsWriteOff, outOrderAccrual *float32
+	)
+
+	rows, err := m.conn.Query(
+		*ctx, "select "+defOrderData+","+defUserData+
+			" from orders o"+
+			" left join users u on u.id = o.client"+
+			" where o.status in ($1)",
+		statuses)
+	if err != nil {
+		return nil, nil, fmt.Errorf(
+			"GetOrdersByStatuses->m.conn.Query %w", err)
 	}
 
 	defer rows.Close()

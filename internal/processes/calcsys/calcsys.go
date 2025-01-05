@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/dmitrovia/gophermart/internal/logger"
+	"github.com/dmitrovia/gophermart/internal/models/endpointsattr/getstatusfromcalcsystemattr"
 	"github.com/dmitrovia/gophermart/internal/models/processesattr/calcsysattr"
 )
 
@@ -57,6 +58,10 @@ func updateStatusOrdersAndCalculatePoints(
 		syscall.SIGTERM,
 		syscall.SIGINT)
 
+	attrEndpoint := &getstatusfromcalcsystemattr.
+		GetStatusFromCalcSystemAttr{}
+	attrEndpoint.Init(attr.GetLogger())
+
 	for {
 		select {
 		case <-channelCancel:
@@ -66,7 +71,7 @@ func updateStatusOrdersAndCalculatePoints(
 		case <-time.After(
 			attr.GetInetervalCallCalcService()):
 			err := attr.GetCalculateService().
-				UpdateStatusOrdersAndCalculatePoints()
+				UpdateStatusOrdersAndCalculatePoints(attrEndpoint)
 			if err != nil {
 				logger.DoInfoLogFromErr(
 					"updateStatusOrdersAndCalculatePoints",

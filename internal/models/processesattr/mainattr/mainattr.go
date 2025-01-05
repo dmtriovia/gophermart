@@ -103,11 +103,11 @@ func (p *MainAttr) Init() error {
 	p.GetCalcProcAttr().SetWaitSecRespCalcService(
 		initWaitSecRespCalcService * time.Second)
 
+	p.defPORT = "localhost:8080"
 	p.defAccSysAddr = "localhost:8090"
 	p.defDatabaseURL = "postgres://postgres:postgres@" +
 		"localhost:5432/praktikum?sslmode=disable"
 	p.GetServerProcAttr().SetValidAddrPattern(pattern)
-	p.defPORT = "localhost:8080"
 
 	logger, err := logger.Initialize(zapLogLevel)
 	if err != nil {

@@ -12,3 +12,6 @@ COMMIT;
 
 CREATE INDEX orders__client__identifier__index
 ON orders (client,identifier);
+
+CREATE INDEX orders__status__index
+ON orders (status);

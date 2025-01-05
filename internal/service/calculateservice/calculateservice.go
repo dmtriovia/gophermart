@@ -2,36 +2,53 @@ package calculateservice
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"time"
 
+	"github.com/dmitrovia/gophermart/internal/logger"
+	"github.com/dmitrovia/gophermart/internal/models/apimodels"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accounthistorymodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
-	gsfcs "github.com/dmitrovia/gophermart/internal/models/endpointsattr/getstatusfromcalcsystemattr"
+	"github.com/dmitrovia/gophermart/internal/models/endpointsattr/getstatusfromcalcsystemattr"
 	"github.com/dmitrovia/gophermart/internal/storage"
 	"github.com/jackc/pgx/v5"
+	"go.uber.org/zap"
 )
 
+var errEmptyData = errors.New("data is empty")
+
+var errStatusInternalServerError = errors.New(
+	"error when accessing the service")
+
+var errStatusNoContent = errors.New(
+	"the order is not registered in the payment system")
+
 type CalculateService struct {
-	accRepo     storage.AccountStorage
-	accOrder    storage.OrderStorage
-	ctxDuration time.Duration
-	pgxConn     *pgx.Conn
+	accRepo               storage.AccountStorage
+	accOrder              storage.OrderStorage
+	ctxDurationDB         time.Duration
+	ctxDurationOutService time.Duration
+	pgxConn               *pgx.Conn
 }
 
 func NewCalculateService(
 	stor storage.AccountStorage,
 	acco storage.OrderStorage,
-	ctxDur time.Duration,
+	ctxDurationDB time.Duration,
+	ctxDurationOutService time.Duration,
 	pgxC *pgx.Conn,
 ) *CalculateService {
 	return &CalculateService{
-		pgxConn:     pgxC,
-		accRepo:     stor,
-		ctxDuration: ctxDur,
-		accOrder:    acco,
+		pgxConn:               pgxC,
+		accRepo:               stor,
+		ctxDurationDB:         ctxDurationDB,
+		ctxDurationOutService: ctxDurationOutService,
+		accOrder:              acco,
 	}
 }
 
@@ -42,7 +59,7 @@ func (s *CalculateService) CalculatePoints(
 ) error {
 	ctx, cancel := context.WithTimeout(
 		context.Background(),
-		s.ctxDuration)
+		s.ctxDurationDB)
 	defer cancel()
 
 	tranz, err := s.pgxConn.Begin(ctx)
@@ -51,26 +68,26 @@ func (s *CalculateService) CalculatePoints(
 			"CalculatePoints->s.pgxConn.Begin %w", err)
 	}
 
-	_, err = s.accRepo.MinusPointsByID(
-		&ctx, acc.GetID(), points)
+	_, err = s.accRepo.ChangePointsByID(
+		&ctx, acc.GetID(), points, "-")
 	if err != nil {
 		return fmt.Errorf(
-			"CalculatePoints->MinusPointsByID: %w",
+			"CalculatePoints->ChangePointsByID: %w",
 			err)
 	}
 
-	_, err = s.accRepo.PlusWithdrawnByID(
-		&ctx, acc.GetID(), points)
+	_, err = s.accRepo.ChangeWithdrawnByID(
+		&ctx, acc.GetID(), points, "+")
 	if err != nil {
 		return fmt.Errorf(
-			"CalculatePoints->PlusWithdrawnByID: %w", err)
+			"CalculatePoints->ChangeWithdrawnByID: %w", err)
 	}
 
-	_, err = s.accOrder.PlusPointsWriteOffByID(
-		&ctx, acc.GetID(), points)
+	_, err = s.accOrder.ChangePointsWriteOffByID(
+		&ctx, acc.GetID(), points, "+")
 	if err != nil {
 		return fmt.Errorf(
-			"CalculatePoints->PlusPointsWriteOffByID: %w",
+			"CalculatePoints->ChangePointsWriteOffByID: %w",
 			err)
 	}
 
@@ -111,21 +128,186 @@ func createAccountHistory(
 
 func (
 	s *CalculateService,
-) UpdateStatusOrdersAndCalculatePoints() error {
+) UpdateStatusOrdersAndCalculatePoints(
+	attr *getstatusfromcalcsystemattr.
+		GetStatusFromCalcSystemAttr,
+) error {
+	ctxDB, cancel := context.WithTimeout(
+		context.Background(),
+		s.ctxDurationDB)
+	defer cancel()
+
+	statuses := "REGISTERED,PROCESSING"
+	funcName := "UpdateStatusOrdersAndCalculatePoints"
+
+	orders, scanErrors,
+		err := s.accOrder.GetOrdersByStatuses(&ctxDB, statuses)
+	if err != nil {
+		return fmt.Errorf("UpdateStatusOrdersAndCalculatePoints"+
+			"->GetOrdersByStatuses: %w",
+			err)
+	}
+
+	if len(*scanErrors) != 0 {
+		for _, err := range *scanErrors {
+			doLog(funcName+"->Scan", err, attr.GetLogger())
+		}
+	}
+
+	for _, order := range *orders {
+		ctxReq, cancel1 := context.WithTimeout(
+			context.Background(),
+			s.ctxDurationOutService)
+		defer cancel1()
+
+		tmp := apimodels.InGetStatusFromCalcSystem{}
+		tmp.Set(order.GetIdentifier())
+
+		attr.SetURLForReq(attr.GetDefURL() + *tmp.Identifier)
+
+		response, err := getStatusFromCalcSystem(&ctxReq, attr)
+		if err != nil {
+			doLog(funcName+"->getStatusFromCalcSystem",
+				err, attr.GetLogger())
+		}
+
+		err = processResponse(ctxDB, s, response, &order)
+		if err != nil {
+			doLog(funcName+"->processResponse",
+				err, attr.GetLogger())
+		}
+
+		err = response.Body.Close()
+		if err != nil {
+			doLog(funcName+"->esponse.Body.Close",
+				err, attr.GetLogger())
+		}
+	}
+
 	return nil
+}
+
+func processResponse(
+	ctx context.Context,
+	service *CalculateService,
+	response *http.Response,
+	order *ordermodel.Order,
+) error {
+	code := response.StatusCode
+
+	switch code {
+	case http.StatusOK:
+		err := processStatusOK(ctx, service, response, order)
+		if err != nil {
+			return fmt.Errorf("processResponse->processStatusOK %w",
+				err)
+		}
+	case http.StatusNoContent:
+		return fmt.Errorf("StatusNoContent %w",
+			errStatusNoContent)
+	case http.StatusInternalServerError:
+		return fmt.Errorf("processResponse %w",
+			errStatusInternalServerError)
+	}
+
+	return nil
+}
+
+func processStatusOK(
+	ctx context.Context,
+	service *CalculateService,
+	response *http.Response,
+	order *ordermodel.Order,
+) error {
+	respData := &apimodels.OutGetStatusFromCalcSystem{}
+
+	err := getRespData(response, respData)
+	if err != nil {
+		return fmt.Errorf("processResponse->getRespData %w", err)
+	}
+
+	status := respData.Status
+	processing := ordermodel.OrderStatusProcessing
+	invalid := ordermodel.OrderStatusInvalid
+	processed := ordermodel.OrderStatusProcessed
+
+	if *order.GetStatus() == *status {
+		return nil
+	}
+
+	switch *status {
+	case processing:
+		_, err := service.accOrder.UpdateStatusByID(&ctx,
+			order.GetID(), processing)
+		if err != nil {
+			return fmt.Errorf(
+				"processResponse->UpdateStatusByID %w",
+				err)
+		}
+
+	case invalid:
+		_, err := service.accOrder.UpdateStatusByID(&ctx,
+			order.GetID(), invalid)
+		if err != nil {
+			return fmt.Errorf(
+				"processResponse->UpdateStatusByID %w",
+				err)
+		}
+	case processed:
+		_, err := service.accOrder.UpdateStatusByID(&ctx,
+			order.GetID(), processed)
+		if err != nil {
+			return fmt.Errorf(
+				"processResponse->UpdateStatusByID %w",
+				err)
+		}
+	}
+
+	return nil
+}
+
+func getRespData(
+	response *http.Response,
+	respData *apimodels.OutGetStatusFromCalcSystem,
+) error {
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return fmt.Errorf("getRespData->io.ReadAll %w", err)
+	}
+
+	if len(body) == 0 {
+		return fmt.Errorf("getRespData: %w", errEmptyData)
+	}
+
+	err = json.Unmarshal(body, respData)
+	if err != nil {
+		return fmt.Errorf("getRespData->json.Unmarshal %w", err)
+	}
+
+	return nil
+}
+
+func doLog(msgText string,
+	err error,
+	zLogger *zap.Logger,
+) {
+	logger.DoInfoLogFromErr(
+		msgText,
+		err, zLogger)
 }
 
 func getStatusFromCalcSystem(
 	ctx *context.Context,
-	attr *gsfcs.GetStatusFromCalcSystemAttr,
+	attr *getstatusfromcalcsystemattr.
+		GetStatusFromCalcSystemAttr,
 ) (
 	*http.Response, error,
 ) {
 	req, err := http.NewRequestWithContext(
 		*ctx,
 		attr.GetMethod(),
-		attr.GetURL(),
-		attr.GetReqData())
+		attr.GetURLForReq(),
+		nil)
 	if err != nil {
 		return nil,
 			fmt.Errorf(

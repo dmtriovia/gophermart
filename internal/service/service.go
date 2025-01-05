@@ -5,6 +5,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
+	"github.com/dmitrovia/gophermart/internal/models/endpointsattr/getstatusfromcalcsystemattr"
 )
 
 type AccountService interface {
@@ -39,5 +40,7 @@ type CalculateService interface {
 		points float32,
 	) error
 
-	UpdateStatusOrdersAndCalculatePoints() error
+	UpdateStatusOrdersAndCalculatePoints(
+		attr *getstatusfromcalcsystemattr.
+			GetStatusFromCalcSystemAttr) error
 }

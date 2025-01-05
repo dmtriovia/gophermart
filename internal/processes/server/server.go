@@ -89,7 +89,7 @@ func waitClose(
 		if ok {
 			err := attr.GetServer().Shutdown(context.TODO())
 			if err != nil {
-				fmt.Println("RP->Shutdown: %w", err)
+				fmt.Println("waitClose->Shutdown: %w", err)
 			}
 
 			waitG.Done()

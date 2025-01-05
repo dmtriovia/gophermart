@@ -69,16 +69,23 @@ func (o *OutWithdrawals) SetOutWithdrawals(
 	o.Createddate = createddate
 }
 
-type InReqStatusFromCalcSystem struct {
-	Identifier string
+type InGetStatusFromCalcSystem struct {
+	Identifier *string
 }
-type OutReqStatusFromCalcSystem struct {
-	Identifier *string `json:"number"`
+
+func (o *InGetStatusFromCalcSystem) Set(
+	identifier *string,
+) {
+	o.Identifier = identifier
+}
+
+type OutGetStatusFromCalcSystem struct {
+	Identifier *string `json:"order"`
 	Status     *string `json:"status"`
 	Accrual    *int32  `json:"accrual,omitempty"`
 }
 
-func (o *OutReqStatusFromCalcSystem) SetOutGetOrder(
+func (o *OutGetStatusFromCalcSystem) Set(
 	identifier *string,
 	status *string,
 	accrual *int32,

@@ -33,19 +33,20 @@ const defOrderData = "o.id, o.identifier, o.createddate, " +
 const defAccHistData = "ah.id,ah.points_write_off," +
 	"ah.client_order,ah.createddate"
 
-func (m *AccountStorage) MinusPointsByID(
+func (m *AccountStorage) ChangePointsByID(
 	ctx *context.Context,
 	accID int32,
 	newValuePoints float32,
+	sign string,
 ) (bool, error) {
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE accounts SET points=points-$1 where id=$2",
+		"UPDATE accounts SET points=points"+sign+"$1 where id=$2",
 		newValuePoints,
 		accID)
 	if err != nil {
 		return false, fmt.Errorf(
-			"MinusPointsByID->m.conn.Exec( %w", err)
+			"ChangePointsByID->m.conn.Exec( %w", err)
 	}
 
 	if rows.RowsAffected() == 0 {
@@ -55,19 +56,21 @@ func (m *AccountStorage) MinusPointsByID(
 	return true, nil
 }
 
-func (m *AccountStorage) PlusWithdrawnByID(
+func (m *AccountStorage) ChangeWithdrawnByID(
 	ctx *context.Context,
 	accID int32,
 	newValueWithdrawn float32,
+	sign string,
 ) (bool, error) {
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE accounts SET withdrawn=withdrawn+$1 where id=$2",
+		"UPDATE accounts SET withdrawn=withdrawn"+
+			sign+"$1 where id=$2",
 		newValueWithdrawn,
 		accID)
 	if err != nil {
 		return false, fmt.Errorf(
-			"PlusWithdrawnByID->m.conn.Exec( %w", err)
+			"ChangeWithdrawnByID->m.conn.Exec( %w", err)
 	}
 
 	if rows.RowsAffected() == 0 {

@@ -1,40 +1,46 @@
 package getstatusfromcalcsystemattr
 
 import (
-	"bytes"
 	"net/http"
+
+	"go.uber.org/zap"
 )
 
 type GetStatusFromCalcSystemAttr struct {
-	reqData     *bytes.Reader
 	client      *http.Client
 	method      string
 	contentType string
-	url         string
+	urlForReq   string
+	defURL      string
+	zapLogger   *zap.Logger
 }
 
 func (r *GetStatusFromCalcSystemAttr) Init(
-	reqData *bytes.Reader,
-	client *http.Client,
-	method string,
-	contentType string,
+	logger *zap.Logger,
+) {
+	r.client = &http.Client{}
+	r.method = http.MethodGet
+	r.defURL = "/api/orders/"
+	r.contentType = "text/plain"
+	r.zapLogger = logger
+}
+
+func (
+	r *GetStatusFromCalcSystemAttr) SetURLForReq(
 	url string,
 ) {
-	r.reqData = reqData
-	r.client = client
-	r.method = method
-	r.contentType = contentType
-	r.url = url
+	r.urlForReq = url
 }
 
 func (
 	r *GetStatusFromCalcSystemAttr,
-) GetReqData() *bytes.Reader {
-	return r.reqData
+) GetLogger() *zap.Logger {
+	return r.zapLogger
 }
 
 func (
-	r *GetStatusFromCalcSystemAttr) GetClient() *http.Client {
+	r *GetStatusFromCalcSystemAttr,
+) GetClient() *http.Client {
 	return r.client
 }
 
@@ -49,6 +55,11 @@ func (
 }
 
 func (
-	r *GetStatusFromCalcSystemAttr) GetURL() string {
-	return r.url
+	r *GetStatusFromCalcSystemAttr) GetDefURL() string {
+	return r.defURL
+}
+
+func (
+	r *GetStatusFromCalcSystemAttr) GetURLForReq() string {
+	return r.urlForReq
 }

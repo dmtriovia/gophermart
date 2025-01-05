@@ -32,10 +32,11 @@ type OrderStorage interface {
 		ctx *context.Context,
 		user *ordermodel.Order) error
 
-	PlusPointsWriteOffByID(
+	ChangePointsWriteOffByID(
 		ctx *context.Context,
 		orderID int32,
 		newValuePointsWriteOff float32,
+		sign string,
 	) (bool, error)
 
 	UpdateStatusByID(
@@ -43,6 +44,11 @@ type OrderStorage interface {
 		orderID int32,
 		status string,
 	) (bool, error)
+
+	GetOrdersByStatuses(
+		ctx *context.Context,
+		statuses string,
+	) (*[]ordermodel.Order, *[]error, error)
 }
 
 type AccountStorage interface {
@@ -54,16 +60,18 @@ type AccountStorage interface {
 		clientID int32,
 	) (*accountmodel.Account, error)
 
-	PlusWithdrawnByID(
+	ChangeWithdrawnByID(
 		ctx *context.Context,
 		accID int32,
 		newValueWithdrawn float32,
+		sign string,
 	) (bool, error)
 
-	MinusPointsByID(
+	ChangePointsByID(
 		ctx *context.Context,
 		accID int32,
 		newValuePoints float32,
+		sign string,
 	) (bool, error)
 
 	CreateAccountHistory(ctx *context.Context,
