@@ -214,10 +214,8 @@ func processResponse(
 }
 
 func processStatusOK(
-	ctx context.Context,
-	service *CalculateService,
-	response *http.Response,
-	order *ordermodel.Order,
+	ctx context.Context, service *CalculateService,
+	response *http.Response, order *ordermodel.Order,
 ) error {
 	respData := &apimodels.OutGetStatusFromCalcSystem{}
 
@@ -226,23 +224,21 @@ func processStatusOK(
 		return fmt.Errorf("processResponse->getRespData %w", err)
 	}
 
-	status := respData.Status
 	processing := ordermodel.OrderStatusProcessing
 	invalid := ordermodel.OrderStatusInvalid
 	processed := ordermodel.OrderStatusProcessed
 
-	if *order.GetStatus() == *status {
+	if *order.GetStatus() == *respData.Status {
 		return nil
 	}
 
-	switch *status {
+	switch *respData.Status {
 	case processing:
 		_, err := service.accOrder.UpdateStatusByID(&ctx,
 			order.GetID(), processing)
 		if err != nil {
 			return fmt.Errorf(
-				"processResponse->UpdateStatusByID %w",
-				err)
+				"processResponse->UpdateStatusByID %w", err)
 		}
 
 	case invalid:
@@ -250,16 +246,46 @@ func processStatusOK(
 			order.GetID(), invalid)
 		if err != nil {
 			return fmt.Errorf(
-				"processResponse->UpdateStatusByID %w",
-				err)
+				"processResponse->UpdateStatusByID %w", err)
 		}
 	case processed:
-		_, err := service.accOrder.UpdateStatusByID(&ctx,
-			order.GetID(), processed)
+		err := setProcessed(ctx, service, order, respData)
 		if err != nil {
 			return fmt.Errorf(
-				"processResponse->UpdateStatusByID %w",
-				err)
+				"processResponse->setProcessed %w", err)
+		}
+	}
+
+	return nil
+}
+
+func setProcessed(ctx context.Context,
+	service *CalculateService,
+	order *ordermodel.Order,
+	respData *apimodels.OutGetStatusFromCalcSystem,
+) error {
+	processed := ordermodel.OrderStatusProcessed
+
+	_, err := service.accOrder.UpdateStatusByID(&ctx,
+		order.GetID(), processed)
+	if err != nil {
+		return fmt.Errorf(
+			"processResponse->UpdateStatusByID %w", err)
+	}
+
+	acc, err := service.accRepo.GetAccountByClient(&ctx,
+		order.GetClient().GetID())
+	if err != nil {
+		return fmt.Errorf(
+			"processResponse->GetAccountByClient %w", err)
+	}
+
+	if respData.Accrual != nil {
+		_, err := service.accRepo.ChangePointsByID(&ctx,
+			acc.GetID(), *respData.Accrual, "+")
+		if err != nil {
+			return fmt.Errorf(
+				"processResponse->UpdateStatusByID %w", err)
 		}
 	}
 

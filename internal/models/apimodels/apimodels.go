@@ -80,15 +80,15 @@ func (o *InGetStatusFromCalcSystem) Set(
 }
 
 type OutGetStatusFromCalcSystem struct {
-	Identifier *string `json:"order"`
-	Status     *string `json:"status"`
-	Accrual    *int32  `json:"accrual,omitempty"`
+	Identifier *string  `json:"order"`
+	Status     *string  `json:"status"`
+	Accrual    *float32 `json:"accrual,omitempty"`
 }
 
 func (o *OutGetStatusFromCalcSystem) Set(
 	identifier *string,
 	status *string,
-	accrual *int32,
+	accrual *float32,
 ) {
 	o.Identifier = identifier
 	o.Status = status
