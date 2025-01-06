@@ -14,7 +14,7 @@ const initwaitSecRespDB = 10
 
 const initWaitSecRespCalcService = 10
 
-const initInetervalCallCalcService = 2
+const initInetervalCallCalcService = 1
 
 type MainAttr struct {
 	calcProcAttr         *calcsysattr.CalcSysAttr

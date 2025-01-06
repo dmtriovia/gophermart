@@ -38,7 +38,7 @@ func (m *OrderStorage) CreateOrder(
 		"INSERT INTO orders (identifier,client,"+
 			" accrual,status) VALUES ($1,$2,$3,$4) RETURNING id",
 		order.GetIdentifier(), order.GetClient().GetID(),
-		order.GetAccrual(), order.GetStatus()).Scan(&lastInsertID)
+		0, order.GetStatus()).Scan(&lastInsertID)
 	if err != nil {
 		return fmt.Errorf(
 			"CreateOrder->Scan: %w", err)

@@ -90,8 +90,8 @@ func (m *AccountStorage) CreateAccount(
 		*ctx,
 		"INSERT INTO accounts (client,"+
 			" points,withdrawn) VALUES ($1,$2,$3) RETURNING id",
-		account.GetClient().GetID(), account.GetPoints(),
-		account.GetWithdrawn()).Scan(&lastInsertID)
+		account.GetClient().GetID(), 0,
+		0).Scan(&lastInsertID)
 	if err != nil {
 		return fmt.Errorf(
 			"CreateAccount->Scan: %w", err)
