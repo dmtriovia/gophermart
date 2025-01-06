@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dmitrovia/gophermart/internal/logger"
@@ -133,19 +134,17 @@ func (
 		GetStatusFromCalcSystemAttr,
 ) error {
 	ctxDB, cancel := context.WithTimeout(
-		context.Background(),
-		s.ctxDurationDB)
+		context.Background(), s.ctxDurationDB)
 	defer cancel()
 
-	statuses := "REGISTERED,PROCESSING"
+	statuses := "'REGISTERED','PROCESSING'"
 	funcName := "UpdateStatusOrdersAndCalculatePoints"
 
 	orders, scanErrors,
 		err := s.accOrder.GetOrdersByStatuses(&ctxDB, statuses)
 	if err != nil {
 		return fmt.Errorf("UpdateStatusOrdersAndCalculatePoints"+
-			"->GetOrdersByStatuses: %w",
-			err)
+			"->GetOrdersByStatuses: %w", err)
 	}
 
 	if len(*scanErrors) != 0 {
@@ -156,31 +155,35 @@ func (
 
 	for _, order := range *orders {
 		ctxReq, cancel1 := context.WithTimeout(
-			context.Background(),
-			s.ctxDurationOutService)
+			context.Background(), s.ctxDurationOutService)
 		defer cancel1()
 
 		tmp := apimodels.InGetStatusFromCalcSystem{}
 		tmp.Set(order.GetIdentifier())
-
 		attr.SetURLForReq(attr.GetDefURL() + *tmp.Identifier)
 
 		response, err := getStatusFromCalcSystem(&ctxReq, attr)
 		if err != nil {
 			doLog(funcName+"->getStatusFromCalcSystem",
 				err, attr.GetLogger())
+
+			break
 		}
 
 		err = processResponse(ctxDB, s, response, &order)
 		if err != nil {
 			doLog(funcName+"->processResponse",
 				err, attr.GetLogger())
+
+			continue
 		}
 
 		err = response.Body.Close()
 		if err != nil {
 			doLog(funcName+"->esponse.Body.Close",
 				err, attr.GetLogger())
+
+			continue
 		}
 	}
 
@@ -333,7 +336,7 @@ func getStatusFromCalcSystem(
 		*ctx,
 		attr.GetMethod(),
 		attr.GetURLForReq(),
-		nil)
+		strings.NewReader(""))
 	if err != nil {
 		return nil,
 			fmt.Errorf(

@@ -60,7 +60,8 @@ func updateStatusOrdersAndCalculatePoints(
 
 	attrEndpoint := &getstatusfromcalcsystemattr.
 		GetStatusFromCalcSystemAttr{}
-	attrEndpoint.Init(attr.GetLogger())
+	attrEndpoint.Init(attr.GetLogger(),
+		*attr.GetAccrualSystemAddress())
 
 	for {
 		select {
@@ -75,8 +76,7 @@ func updateStatusOrdersAndCalculatePoints(
 			if err != nil {
 				logger.DoInfoLogFromErr(
 					"updateStatusOrdersAndCalculatePoints",
-					err,
-					attr.GetLogger())
+					err, attr.GetLogger())
 			}
 		}
 	}

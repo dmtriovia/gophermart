@@ -17,10 +17,11 @@ type GetStatusFromCalcSystemAttr struct {
 
 func (r *GetStatusFromCalcSystemAttr) Init(
 	logger *zap.Logger,
+	accrualSystemAddress string,
 ) {
 	r.client = &http.Client{}
 	r.method = http.MethodGet
-	r.defURL = "/api/orders/"
+	r.defURL = accrualSystemAddress + "/api/orders/"
 	r.contentType = "text/plain"
 	r.zapLogger = logger
 }

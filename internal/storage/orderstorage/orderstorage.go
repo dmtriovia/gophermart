@@ -246,8 +246,7 @@ func (m *OrderStorage) GetOrdersByStatuses(
 		*ctx, "select "+defOrderData+","+defUserData+
 			" from orders o"+
 			" left join users u on u.id = o.client"+
-			" where o.status in ($1)",
-		statuses)
+			" where o.status in ("+statuses+")")
 	if err != nil {
 		return nil, nil, fmt.Errorf(
 			"GetOrdersByStatuses->m.conn.Query %w", err)
