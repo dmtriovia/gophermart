@@ -55,7 +55,7 @@ jobs:
           ./gophermarttest -test.v -test.run=^TestGophermart$ \
             -gophermart-binary-path=cmd/gophermart/gophermart \
             -gophermart-host=localhost \
-            -gophermart-port=8080 \
+            -gophermart-port=8070 \
             -gophermart-database-uri="postgres://postgres:postgres@localhost:5432/praktikum?sslmode=disable" \
             -accrual-binary-path=cmd/accrual/accrual_linux_amd64 \
             -accrual-host=localhost \
