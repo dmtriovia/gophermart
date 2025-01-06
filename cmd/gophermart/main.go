@@ -92,17 +92,15 @@ func initSystemAttrs(matr *mainattr.MainAttr) error {
 			return errParseFlags
 		}
 
-		matr.GetServerProcAttr().SetRunAddress(RunAddress)
+		matr.SetRunAddress(RunAddress)
 	}
 
 	if DatabaseURL != "" {
-		matr.GetServerProcAttr().SetDatabaseURL(DatabaseURL)
-		matr.GetCalcProcAttr().SetDatabaseURL(DatabaseURL)
+		matr.SetDatabaseURL(DatabaseURL)
 	}
 
 	if AccrualSystemAddress != "" {
-		matr.GetCalcProcAttr().SetAccrualSystemAddress(
-			AccrualSystemAddress)
+		matr.SetAccrualSystemAddress(AccrualSystemAddress)
 	}
 
 	return nil

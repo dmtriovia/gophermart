@@ -60,6 +60,10 @@ func (p *MainAttr) GetDatabaseURL() *string {
 	return &p.databaseURL
 }
 
+func (p *MainAttr) SetDatabaseURL(url string) {
+	p.databaseURL = url
+}
+
 func (
 	p *MainAttr,
 ) GetCalcProcAttr() *calcsysattr.CalcSysAttr {
