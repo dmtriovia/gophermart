@@ -21,7 +21,7 @@ func (r *GetStatusFromCalcSystemAttr) Init(
 ) {
 	r.client = &http.Client{}
 	r.method = http.MethodGet
-	r.defURL = "http://" + accrualSystemAddress +
+	r.defURL = accrualSystemAddress +
 		"/api/orders/"
 	r.contentType = "text/plain"
 	r.zapLogger = logger
