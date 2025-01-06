@@ -154,8 +154,8 @@ func (m *AccountStorage) GetAccountByClient(
 	acc := &accountmodel.Account{}
 	user := &usermodel.User{}
 
-	user.SetUser(*outUserID, outUserPass,
-		outUserLogin, outUserCreateddate)
+	user.SetUser(*outUserID, outUserLogin,
+		outUserPass, outUserCreateddate)
 	acc.SetAccount(
 		*outAccountID, user, outAccountCreateddate,
 		outAccountPoints, outAccountWithdrawn)

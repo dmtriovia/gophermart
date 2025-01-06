@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/dmitrovia/gophermart/internal/functions/validatef"
 	"github.com/dmitrovia/gophermart/internal/logger"
@@ -64,7 +65,7 @@ func (h *SetOrders) SetOrderHandler(
 		orderClient := order.GetClient().GetLogin()
 		sessionClient := h.attr.GetSessionUser().GetLogin()
 
-		if orderClient == sessionClient {
+		if *orderClient == *sessionClient {
 			writer.WriteHeader(http.StatusOK)
 
 			return
@@ -95,7 +96,7 @@ func createOrder(reqAttr *apimodels.InSetOrder,
 	order.SetIdentifier(&reqAttr.Identifier)
 	order.SetClient(hand.attr.GetSessionUser())
 
-	status := ordermodel.OrderStatusRegistered
+	status := ordermodel.OrderStatusNew
 	order.SetStatus(&status)
 
 	err := hand.serv.CreateOrder(order)
@@ -113,7 +114,18 @@ func validate(reqAttr *apimodels.InSetOrder,
 	res, _ := validatef.IsMatchesTemplate(
 		reqAttr.Identifier, attr.GetValidIdentOrderPattern())
 
-	return res
+	if !res {
+		return res
+	}
+
+	value, err := strconv.Atoi(reqAttr.Identifier)
+	if err != nil {
+		return false
+	}
+
+	resLuna := validatef.IsValidLuna(value)
+
+	return resLuna
 }
 
 func getReqData(

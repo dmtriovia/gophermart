@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 
 	"github.com/dmitrovia/gophermart/internal/functions/validatef"
 	"github.com/dmitrovia/gophermart/internal/logger"
@@ -70,13 +71,13 @@ func (h *Withdraw) WithdrawHandler(
 		return
 	}
 
-	belongsToSessionUser := order.
-		GetClient().GetID() == h.attr.GetSessionUser().GetID()
+	if !isExist {
+		order, err = createOrder(reqAttr, h)
+		if err != nil {
+			setErr(writer, h.attr, err, "createOrder")
 
-	if !isExist || !belongsToSessionUser {
-		writer.WriteHeader(http.StatusUnprocessableEntity)
-
-		return
+			return
+		}
 	}
 
 	acc, err := getAccountByClient(h)
@@ -101,6 +102,26 @@ func (h *Withdraw) WithdrawHandler(
 	}
 
 	writer.WriteHeader(http.StatusOK)
+}
+
+func createOrder(reqAttr *apimodels.InWithdraw,
+	hand *Withdraw,
+) (*ordermodel.Order, error) {
+	order := &ordermodel.Order{}
+
+	order.SetIdentifier(&reqAttr.OrderIdentifier)
+	order.SetClient(hand.attr.GetSessionUser())
+
+	status := ordermodel.OrderStatusNew
+	order.SetStatus(&status)
+
+	err := hand.orderService.CreateOrder(order)
+	if err != nil {
+		return nil, fmt.Errorf(
+			"createOrder->h.serv.CreateOrder %w", err)
+	}
+
+	return order, nil
 }
 
 func setErr(writer http.ResponseWriter,
@@ -207,5 +228,16 @@ func validate(reqAttr *apimodels.InWithdraw,
 		reqAttr.OrderIdentifier,
 		attr.GetValidIdentOrderPattern())
 
-	return res
+	if !res {
+		return res
+	}
+
+	value, err := strconv.Atoi(reqAttr.OrderIdentifier)
+	if err != nil {
+		return false
+	}
+
+	resLuna := validatef.IsValidLuna(value)
+
+	return resLuna
 }

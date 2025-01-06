@@ -178,7 +178,8 @@ func initAPIMethods(
 	setMethod(post, "register", mux, attr, register, false)
 	setMethod(post, "login", mux, attr, login, false)
 	setMethod(post, "orders", mux, attr, setOrder, true)
-	setMethod(post, "withdraw", mux, attr, withdraw, true)
+	setMethod(post, "balance/withdraw",
+		mux, attr, withdraw, true)
 
 	mux.MethodNotAllowedHandler = hNotAllowed
 }

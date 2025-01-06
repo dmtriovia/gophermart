@@ -25,3 +25,29 @@ func MatchString(pattern string, s string) (bool, error) {
 
 	return false, fmt.Errorf("MatchString: %w", err)
 }
+
+const tmp = 10
+
+func IsValidLuna(number int) bool {
+	return (number%10+checksum(number/tmp))%tmp == 0
+}
+
+func checksum(number int) int {
+	var luhn int
+
+	for i := 0; number > 0; i++ {
+		cur := number % tmp
+
+		if i%2 == 0 {
+			cur *= 2
+			if cur > tmp-1 {
+				cur = cur%tmp + cur/tmp
+			}
+		}
+
+		luhn += cur
+		number /= tmp
+	}
+
+	return luhn % tmp
+}

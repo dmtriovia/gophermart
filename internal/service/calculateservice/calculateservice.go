@@ -137,7 +137,7 @@ func (
 		context.Background(), s.ctxDurationDB)
 	defer cancel()
 
-	statuses := "'REGISTERED','PROCESSING'"
+	statuses := "'NEW','REGISTERED','PROCESSING'"
 	funcName := "UpdateStatusOrdersAndCalculatePoints"
 
 	orders, scanErrors,
@@ -227,6 +227,7 @@ func processStatusOK(
 		return fmt.Errorf("processResponse->getRespData %w", err)
 	}
 
+	registered := ordermodel.OrderStatusRegistered
 	processing := ordermodel.OrderStatusProcessing
 	invalid := ordermodel.OrderStatusInvalid
 	processed := ordermodel.OrderStatusProcessed
@@ -235,23 +236,16 @@ func processStatusOK(
 		return nil
 	}
 
-	switch *respData.Status {
-	case processing:
+	if *respData.Status == registered ||
+		*respData.Status == processing ||
+		*respData.Status == invalid {
 		_, err := service.accOrder.UpdateStatusByID(&ctx,
-			order.GetID(), processing)
+			order.GetID(), *respData.Status)
 		if err != nil {
 			return fmt.Errorf(
 				"processResponse->UpdateStatusByID %w", err)
 		}
-
-	case invalid:
-		_, err := service.accOrder.UpdateStatusByID(&ctx,
-			order.GetID(), invalid)
-		if err != nil {
-			return fmt.Errorf(
-				"processResponse->UpdateStatusByID %w", err)
-		}
-	case processed:
+	} else if *respData.Status == processed {
 		err := setProcessed(ctx, service, order, respData)
 		if err != nil {
 			return fmt.Errorf(

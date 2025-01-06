@@ -161,8 +161,8 @@ func (m *OrderStorage) GetOrder(
 	}
 
 	user.SetUser(*outUserID,
-		outUserPass,
 		outUserLogin,
+		outUserPass,
 		outUserCreateddate)
 
 	order.SetOrder(
@@ -216,8 +216,8 @@ func (m *OrderStorage) GetOrdersByClient(
 		if err != nil {
 			errors = append(errors, err)
 		} else {
-			user.SetUser(*outUserID, outUserPass,
-				outUserLogin, outUserCreateddate)
+			user.SetUser(*outUserID, outUserLogin,
+				outUserPass, outUserCreateddate)
 			order.SetOrder(
 				*outOrderID, outOrderIdentifier, user,
 				outOrderCreateddate, outOrderStatus,
@@ -268,8 +268,8 @@ func (m *OrderStorage) GetOrdersByStatuses(
 		if err != nil {
 			errors = append(errors, err)
 		} else {
-			user.SetUser(*outUserID, outUserPass,
-				outUserLogin, outUserCreateddate)
+			user.SetUser(*outUserID, outUserLogin,
+				outUserPass, outUserCreateddate)
 			order.SetOrder(
 				*outOrderID, outOrderIdentifier, user,
 				outOrderCreateddate, outOrderStatus,
