@@ -106,7 +106,7 @@ func (p *MainAttr) Init() error {
 	p.defPORT = "localhost:8080"
 	p.defAccSysAddr = "localhost:8090"
 	p.defDatabaseURL = "postgres://postgres:postgres@" +
-		"localhost:5432/praktikum?sslmode=disable"
+		"postgres:5432/praktikum?sslmode=disable"
 	p.GetServerProcAttr().SetValidAddrPattern(pattern)
 
 	logger, err := logger.Initialize(zapLogLevel)
