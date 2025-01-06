@@ -1,11 +1,10 @@
 name: golangci-lint
-on: 
+on:
+  pull_request:
   push:
     branches:
-      - iter1
-  pull_request:
-    branches:
-      - iter1
+      - main
+      - master
 
 
 permissions:

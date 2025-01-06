@@ -1,9 +1,11 @@
 name: test-and-coverage
 
-on: 
+on:
   pull_request:
+  push:
     branches:
-      - iter1
+      - main
+      - master
 
 jobs:
   build:
