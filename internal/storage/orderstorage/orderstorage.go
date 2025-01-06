@@ -56,7 +56,7 @@ func (m *OrderStorage) UpdateStatusByID(
 ) (bool, error) {
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE orders SET ststus=$1 where id=$2",
+		"UPDATE orders SET status=$1 where id=$2",
 		status,
 		orderID)
 	if err != nil {
@@ -79,7 +79,7 @@ func (m *OrderStorage) UpdateStatusAccrualByID(
 ) (bool, error) {
 	rows, err := m.conn.Exec(
 		*ctx,
-		"UPDATE orders SET ststus=$1, accrual=$2 where id=$3",
+		"UPDATE orders SET status=$1, accrual=$2 where id=$3",
 		status,
 		accrual,
 		orderID)
