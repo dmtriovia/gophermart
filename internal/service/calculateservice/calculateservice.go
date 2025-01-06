@@ -269,8 +269,12 @@ func setProcessed(ctx context.Context,
 ) error {
 	processed := ordermodel.OrderStatusProcessed
 
-	_, err := service.accOrder.UpdateStatusByID(&ctx,
-		order.GetID(), processed)
+	if respData.Accrual == nil {
+		*respData.Accrual = 0
+	}
+
+	_, err := service.accOrder.UpdateStatusAccrualByID(&ctx,
+		order.GetID(), *respData.Accrual, processed)
 	if err != nil {
 		return fmt.Errorf(
 			"processResponse->UpdateStatusByID %w", err)
@@ -283,13 +287,11 @@ func setProcessed(ctx context.Context,
 			"processResponse->GetAccountByClient %w", err)
 	}
 
-	if respData.Accrual != nil {
-		_, err := service.accRepo.ChangePointsByID(&ctx,
-			acc.GetID(), *respData.Accrual, "+")
-		if err != nil {
-			return fmt.Errorf(
-				"processResponse->UpdateStatusByID %w", err)
-		}
+	_, err = service.accRepo.ChangePointsByID(&ctx,
+		acc.GetID(), *respData.Accrual, "+")
+	if err != nil {
+		return fmt.Errorf(
+			"processResponse->UpdateStatusByID %w", err)
 	}
 
 	return nil

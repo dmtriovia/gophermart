@@ -49,6 +49,13 @@ type OrderStorage interface {
 		ctx *context.Context,
 		statuses string,
 	) (*[]ordermodel.Order, *[]error, error)
+
+	UpdateStatusAccrualByID(
+		ctx *context.Context,
+		orderID int32,
+		accrual float32,
+		status string,
+	) (bool, error)
 }
 
 type AccountStorage interface {
