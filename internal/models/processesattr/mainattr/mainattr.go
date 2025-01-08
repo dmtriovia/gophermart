@@ -116,7 +116,7 @@ func (p *MainAttr) Init() error {
 	logger, err := logger.Initialize(zapLogLevel)
 	if err != nil {
 		return fmt.Errorf(
-			"PreInit->logger.Initialize %w",
+			"Init->logger.Initialize %w",
 			err)
 	}
 

@@ -105,7 +105,7 @@ func generateToken(
 		[]byte(attr.GetSecret()))
 	if err != nil {
 		return token, fmt.Errorf(
-			"generateToken->generateToken.SignedString: %w",
+			"generateToken->SignedString: %w",
 			errEmptyData)
 	}
 

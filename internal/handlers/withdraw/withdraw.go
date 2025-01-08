@@ -71,15 +71,6 @@ func (h *Withdraw) WithdrawHandler(
 		return
 	}
 
-	if !isExist {
-		order, err = createOrder(reqAttr, h)
-		if err != nil {
-			setErr(writer, h.attr, err, "createOrder")
-
-			return
-		}
-	}
-
 	acc, err := getAccountByClient(h)
 	if err != nil {
 		setErr(writer, h.attr, err, "getAccountByClient")
@@ -92,6 +83,15 @@ func (h *Withdraw) WithdrawHandler(
 		writer.WriteHeader(http.StatusPaymentRequired)
 
 		return
+	}
+
+	if !isExist {
+		order, err = createOrder(reqAttr, h)
+		if err != nil {
+			setErr(writer, h.attr, err, "createOrder")
+
+			return
+		}
 	}
 
 	err = calculatePoints(h, acc, order, reqAttr)
@@ -146,7 +146,7 @@ func calculatePoints(
 		reqAttr.PointsWriteOff)
 	if err != nil {
 		return fmt.Errorf(
-			"calculatePoints->accountService.CalculatePoints: %w",
+			"calculatePoints->calculateService.CalculatePoints: %w",
 			err)
 	}
 

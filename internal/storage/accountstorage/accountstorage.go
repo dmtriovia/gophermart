@@ -35,18 +35,19 @@ const defAccHistData = "ah.id,ah.points_write_off," +
 
 func (m *AccountStorage) ChangePointsByID(
 	ctx *context.Context,
+	tranz pgx.Tx,
 	accID int32,
 	newValuePoints float32,
 	sign string,
 ) (bool, error) {
-	rows, err := m.conn.Exec(
+	rows, err := tranz.Exec(
 		*ctx,
 		"UPDATE accounts SET points=points"+sign+"$1 where id=$2",
 		newValuePoints,
 		accID)
 	if err != nil {
 		return false, fmt.Errorf(
-			"ChangePointsByID->m.conn.Exec( %w", err)
+			"ChangePointsByID->tranz.Exec( %w", err)
 	}
 
 	if rows.RowsAffected() == 0 {
@@ -58,11 +59,12 @@ func (m *AccountStorage) ChangePointsByID(
 
 func (m *AccountStorage) ChangeWithdrawnByID(
 	ctx *context.Context,
+	tranz pgx.Tx,
 	accID int32,
 	newValueWithdrawn float32,
 	sign string,
 ) (bool, error) {
-	rows, err := m.conn.Exec(
+	rows, err := tranz.Exec(
 		*ctx,
 		"UPDATE accounts SET withdrawn=withdrawn"+
 			sign+"$1 where id=$2",
@@ -70,7 +72,7 @@ func (m *AccountStorage) ChangeWithdrawnByID(
 		accID)
 	if err != nil {
 		return false, fmt.Errorf(
-			"ChangeWithdrawnByID->m.conn.Exec( %w", err)
+			"ChangeWithdrawnByID->tranz.Exec( %w", err)
 	}
 
 	if rows.RowsAffected() == 0 {
@@ -104,11 +106,12 @@ func (m *AccountStorage) CreateAccount(
 
 func (m *AccountStorage) CreateAccountHistory(
 	ctx *context.Context,
+	tranz pgx.Tx,
 	accHist *accounthistorymodel.AccountHistory,
 ) error {
 	var lastInsertID *int32
 
-	err := m.conn.QueryRow(
+	err := tranz.QueryRow(
 		*ctx,
 		"INSERT INTO accounts_history"+
 			" (points_write_off,client_order)"+

@@ -29,7 +29,7 @@ func (r *loggingResponseWriter) Write(
 ) (int, error) {
 	size, err := r.ResponseWriter.Write(b)
 	if err != nil {
-		return 0, fmt.Errorf("loggingResponseWriterWrite: %w",
+		return 0, fmt.Errorf("loggingResponseWriter->Write: %w",
 			err)
 	}
 

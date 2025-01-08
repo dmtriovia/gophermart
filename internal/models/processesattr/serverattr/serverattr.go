@@ -257,7 +257,7 @@ func (p *ServerAttr) SetPgxConn(
 ) error {
 	dbConn, err := pgx.Connect(ctxDB, p.databaseURL)
 	if err != nil {
-		return fmt.Errorf("initiateDBconn->pgx.Connect %w", err)
+		return fmt.Errorf("SetPgxConn->pgx.Connect %w", err)
 	}
 
 	p.pgxConn = dbConn

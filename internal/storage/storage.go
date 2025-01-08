@@ -7,6 +7,7 @@ import (
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/accountmodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/ordermodel"
 	"github.com/dmitrovia/gophermart/internal/models/bizmodels/usermodel"
+	"github.com/jackc/pgx/v5"
 )
 
 type UserStorage interface {
@@ -34,6 +35,7 @@ type OrderStorage interface {
 
 	ChangePointsWriteOffByID(
 		ctx *context.Context,
+		tranz pgx.Tx,
 		orderID int32,
 		newValuePointsWriteOff float32,
 		sign string,
@@ -52,6 +54,7 @@ type OrderStorage interface {
 
 	UpdateStatusAccrualByID(
 		ctx *context.Context,
+		tranz pgx.Tx,
 		orderID int32,
 		accrual float32,
 		status string,
@@ -69,6 +72,7 @@ type AccountStorage interface {
 
 	ChangeWithdrawnByID(
 		ctx *context.Context,
+		tranz pgx.Tx,
 		accID int32,
 		newValueWithdrawn float32,
 		sign string,
@@ -76,12 +80,14 @@ type AccountStorage interface {
 
 	ChangePointsByID(
 		ctx *context.Context,
+		tranz pgx.Tx,
 		accID int32,
 		newValuePoints float32,
 		sign string,
 	) (bool, error)
 
 	CreateAccountHistory(ctx *context.Context,
+		tranz pgx.Tx,
 		account *accounthistorymodel.AccountHistory) error
 
 	GetAccountHistoryByClient(

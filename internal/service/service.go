@@ -12,8 +12,6 @@ type AccountService interface {
 	CreateAccount(account *accountmodel.Account) error
 	GetAccountByClient(clientID int32,
 	) (*accountmodel.Account, error)
-	CreateAccountHistory(
-		account *accounthistorymodel.AccountHistory) error
 	GetAccountHistoryByClient(
 		clientID int32) (*[]accounthistorymodel.AccountHistory,
 		*[]error,

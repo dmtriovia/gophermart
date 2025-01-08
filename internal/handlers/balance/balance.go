@@ -69,7 +69,7 @@ func getAccountByClient(
 		handler.attr.GetSessionUser().GetID())
 	if err != nil {
 		return nil, fmt.Errorf(
-			"GetBalanceByClient->GetAccountByClient: %w",
+			"getAccountByClient->GetAccountByClient: %w",
 			err)
 	}
 

@@ -162,7 +162,7 @@ func newLogger() (*zap.Logger, error) {
 	logger, err := logger.Initialize("info")
 	if err != nil {
 		return nil, fmt.Errorf(
-			"PreInit->logger.Initialize %w",
+			"newLogger->logger.Initialize %w",
 			err)
 	}
 
@@ -179,7 +179,7 @@ func formReqBody(
 	marshall, err := json.Marshal(register)
 	if err != nil {
 		return nil,
-			fmt.Errorf("formResponeBody->Marshal: %w",
+			fmt.Errorf("formReqBody->Marshal: %w",
 				err)
 	}
 

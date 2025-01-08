@@ -73,11 +73,12 @@ func (m *OrderStorage) UpdateStatusByID(
 
 func (m *OrderStorage) UpdateStatusAccrualByID(
 	ctx *context.Context,
+	tranz pgx.Tx,
 	orderID int32,
 	accrual float32,
 	status string,
 ) (bool, error) {
-	rows, err := m.conn.Exec(
+	rows, err := tranz.Exec(
 		*ctx,
 		"UPDATE orders SET status=$1, accrual=$2 where id=$3",
 		status,
@@ -85,7 +86,7 @@ func (m *OrderStorage) UpdateStatusAccrualByID(
 		orderID)
 	if err != nil {
 		return false, fmt.Errorf(
-			"UpdateStatusByID->m.conn.Exec( %w", err)
+			"UpdateStatusAccrualByID->tranz.Exec( %w", err)
 	}
 
 	if rows.RowsAffected() == 0 {
@@ -97,20 +98,21 @@ func (m *OrderStorage) UpdateStatusAccrualByID(
 
 func (m *OrderStorage) ChangePointsWriteOffByID(
 	ctx *context.Context,
+	tranz pgx.Tx,
 	orderID int32,
 	newValuePointsWriteOff float32,
 	sign string,
 ) (bool, error) {
 	t := "points_write_off"
 
-	rows, err := m.conn.Exec(
+	rows, err := tranz.Exec(
 		*ctx,
 		"UPDATE orders SET "+t+"="+t+sign+"$1 where id=$2",
 		newValuePointsWriteOff,
 		orderID)
 	if err != nil {
 		return false, fmt.Errorf(
-			"ChangePointsWriteOffByID->m.conn.Exec( %w", err)
+			"ChangePointsWriteOffByID->tranz.Exec( %w", err)
 	}
 
 	if rows.RowsAffected() == 0 {

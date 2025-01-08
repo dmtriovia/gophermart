@@ -70,33 +70,30 @@ func (s *CalculateService) CalculatePoints(
 	}
 
 	_, err = s.accRepo.ChangePointsByID(
-		&ctx, acc.GetID(), points, "-")
+		&ctx, tranz, acc.GetID(), points, "-")
 	if err != nil {
-		return fmt.Errorf(
-			"CalculatePoints->ChangePointsByID: %w",
-			err)
+		return rollbackWithErr(&ctx, tranz, err,
+			"CalculatePoints->ChangePointsByID")
 	}
 
 	_, err = s.accRepo.ChangeWithdrawnByID(
-		&ctx, acc.GetID(), points, "+")
+		&ctx, tranz, acc.GetID(), points, "+")
 	if err != nil {
-		return fmt.Errorf(
-			"CalculatePoints->ChangeWithdrawnByID: %w", err)
+		return rollbackWithErr(&ctx, tranz, err,
+			"CalculatePoints->ChangeWithdrawnByID")
 	}
 
 	_, err = s.accOrder.ChangePointsWriteOffByID(
-		&ctx, acc.GetID(), points, "+")
+		&ctx, tranz, acc.GetID(), points, "+")
 	if err != nil {
-		return fmt.Errorf(
-			"CalculatePoints->ChangePointsWriteOffByID: %w",
-			err)
+		return rollbackWithErr(&ctx, tranz, err,
+			"CalculatePoints->ChangePointsWriteOffByID")
 	}
 
-	err = createAccountHistory(s, &ctx, order, points)
+	err = createAccountHistory(&ctx, tranz, s, order, points)
 	if err != nil {
-		return fmt.Errorf(
-			"CalculatePoints->CreateAccountHistory: %w",
-			err)
+		return rollbackWithErr(&ctx, tranz, err,
+			"CalculatePoints->CreateAccountHistory")
 	}
 
 	err = tranz.Commit(ctx)
@@ -107,9 +104,27 @@ func (s *CalculateService) CalculatePoints(
 	return nil
 }
 
+func rollbackWithErr(ctx *context.Context,
+	tranz pgx.Tx,
+	err error,
+	nameF string,
+) error {
+	errR := tranz.Rollback(*ctx)
+	if errR != nil {
+		return fmt.Errorf(
+			"rollbackWithErr->Rollback: %w",
+			errR)
+	}
+
+	return fmt.Errorf(
+		"%s: %w",
+		nameF, err)
+}
+
 func createAccountHistory(
-	service *CalculateService,
 	ctx *context.Context,
+	tranz pgx.Tx,
+	service *CalculateService,
 	order *ordermodel.Order,
 	points float32,
 ) error {
@@ -117,7 +132,8 @@ func createAccountHistory(
 	accHist.SetOrder(order)
 	accHist.SetpointsWriteOff(&points)
 
-	err := service.accRepo.CreateAccountHistory(ctx, &accHist)
+	err := service.accRepo.CreateAccountHistory(ctx,
+		tranz, &accHist)
 	if err != nil {
 		return fmt.Errorf(
 			"CreateAccountHistory->accRepo.CreateAccountHistory %w",
@@ -209,7 +225,7 @@ func processResponse(
 		return fmt.Errorf("StatusNoContent %w",
 			errStatusNoContent)
 	case http.StatusInternalServerError:
-		return fmt.Errorf("processResponse %w",
+		return fmt.Errorf("StatusInternalServerError %w",
 			errStatusInternalServerError)
 	}
 
@@ -224,7 +240,7 @@ func processStatusOK(
 
 	err := getRespData(response, respData)
 	if err != nil {
-		return fmt.Errorf("processResponse->getRespData %w", err)
+		return fmt.Errorf("processStatusOK->getRespData %w", err)
 	}
 
 	registered := ordermodel.OrderStatusRegistered
@@ -243,13 +259,13 @@ func processStatusOK(
 			order.GetID(), *respData.Status)
 		if err != nil {
 			return fmt.Errorf(
-				"processResponse->UpdateStatusByID %w", err)
+				"processStatusOK->UpdateStatusByID %w", err)
 		}
 	} else if *respData.Status == processed {
 		err := setProcessed(ctx, service, order, respData)
 		if err != nil {
 			return fmt.Errorf(
-				"processResponse->setProcessed %w", err)
+				"processStatusOK->setProcessed %w", err)
 		}
 	}
 
@@ -267,25 +283,36 @@ func setProcessed(ctx context.Context,
 		*respData.Accrual = 0
 	}
 
-	_, err := service.accOrder.UpdateStatusAccrualByID(&ctx,
-		order.GetID(), *respData.Accrual, processed)
+	tranz, err := service.pgxConn.Begin(ctx)
 	if err != nil {
 		return fmt.Errorf(
-			"processResponse->UpdateStatusByID %w", err)
+			"setProcessed->s.pgxConn.Begin %w", err)
+	}
+
+	_, err = service.accOrder.UpdateStatusAccrualByID(&ctx,
+		tranz, order.GetID(), *respData.Accrual, processed)
+	if err != nil {
+		return rollbackWithErr(&ctx, tranz, err,
+			"setProcessed->UpdateStatusAccrualByID")
 	}
 
 	acc, err := service.accRepo.GetAccountByClient(&ctx,
 		order.GetClient().GetID())
 	if err != nil {
-		return fmt.Errorf(
-			"processResponse->GetAccountByClient %w", err)
+		return rollbackWithErr(&ctx, tranz, err,
+			"setProcessed->GetAccountByClient")
 	}
 
-	_, err = service.accRepo.ChangePointsByID(&ctx,
+	_, err = service.accRepo.ChangePointsByID(&ctx, tranz,
 		acc.GetID(), *respData.Accrual, "+")
 	if err != nil {
-		return fmt.Errorf(
-			"processResponse->UpdateStatusByID %w", err)
+		return rollbackWithErr(&ctx, tranz, err,
+			"setProcessed->ChangePointsByID")
+	}
+
+	err = tranz.Commit(ctx)
+	if err != nil {
+		return fmt.Errorf("setProcessed->tranz.Commit %w", err)
 	}
 
 	return nil

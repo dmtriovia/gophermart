@@ -153,7 +153,7 @@ func parseToken(inToken string,
 		})
 	if err != nil {
 		return nil, fmt.Errorf(
-			"AuthMiddleware>parseToken %w", err)
+			"parseToken>jwt.Parse %w", err)
 	}
 
 	return token, nil

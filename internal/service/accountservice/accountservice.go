@@ -43,24 +43,6 @@ func (s *AccountService) CreateAccount(
 	return nil
 }
 
-func (s *AccountService) CreateAccountHistory(
-	accHist *accounthistorymodel.AccountHistory,
-) error {
-	ctx, cancel := context.WithTimeout(
-		context.Background(),
-		s.ctxDuration)
-	defer cancel()
-
-	err := s.accRepo.CreateAccountHistory(&ctx, accHist)
-	if err != nil {
-		return fmt.Errorf(
-			"CreateAccountHistory->accRepo.CreateAccountHistory: %w",
-			err)
-	}
-
-	return nil
-}
-
 func (s *AccountService) GetAccountByClient(
 	clientID int32,
 ) (*accountmodel.Account, error) {
